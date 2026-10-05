@@ -20,7 +20,7 @@
     "studyXpPerHour": 1.5,
     "studyCostPerHour": 10,
     "practice": {
-      "npcJobMonthly": 60,
+      "npcJobMonthly": 100,
       "freelancePerHour": 0.45,
       "managementPerCompanyMonthly": 40,
       "investingMonthly": 30
@@ -94,13 +94,13 @@
     ],
     "freelancer": {
       "baseHourlyRate": 23.3,
-      "rateGrowthPerLevel": 0.1,
+      "rateGrowthPerLevel": 0.08,
       "establishedClientMonths": 10,
       "establishedReputation": 40,
-      "establishedRateBonus": 0.2,
+      "establishedRateBonus": 0.15,
       "studioManagement": 3,
       "maxCollaborators": 5,
-      "collaboratorMonthlyMargin": 350,
+      "collaboratorMonthlyMargin": 300,
       "productSkill": 8,
       "productHours": 200,
       "royaltyStartMonthly": 300,
