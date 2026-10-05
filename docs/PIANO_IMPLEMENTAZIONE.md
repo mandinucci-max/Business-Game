@@ -148,12 +148,18 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - in Fase 1 l'investitore ha solo il fondo indice: è la classe più debole finché non arrivano prestiti tra giocatori, immobili e borsa;
   - i fallimenti sono rari (circa 2–3% delle aziende per stagione) perché l'operatore cittadino lascia un margine ampio; con la crescita delle aziende e la concorrenza tra giocatori il dato va rivisto.
 
-### Fase 2 — Classi, progressione e personaggio (1–1,5 mesi)
+### Fase 2 — Classi, progressione e personaggio (1–1,5 mesi) — ✅ completata
 
 - **Cose da consegnare**: competenze, carriere, tratti, salto di classe con vincolo di ore, benessere, reputazione, network, condizioni di partenza, talento d'origine, fallimento, focus mensile del dipendente (§3–§5, §9.5).
 - **Completamento**:
   - nelle simulazioni ogni classe d'origine finisce in top 10 tra il 20% e il 30% delle volte;
   - tempi di progressione entro gli obiettivi (§5.5).
+- **Anticipati dalla Fase 4** (decisione del committente): prestiti tra giocatori e immobili; aggiunti anche attrezzature per crescere, quote delle società e prestito sul portafoglio degli investitori (GDD §6.2.1, §9.2.1, §12.2).
+- **Esito**: vedi [`docs/report/fase-2-bilanciamento.md`](./report/fase-2-bilanciamento.md). Ogni classe d'origine finisce nella top 10 tra il 20% e il 30% delle volte.
+- **Indicazioni per le fasi successive**:
+  - i fallimenti di aziende sono circa il 40% per stagione, sopra l'obiettivo del 10–25%: i bot aggressivi crescono a debito; va rivisto con i bot "sociali" della Fase 4 e con giocatori veri;
+  - la mediana dell'imprenditore d'origine è bassa (alta varianza): parte con una ditta che non sempre sopravvive. È coerente con il rischio della classe, ma va osservato nella vertical slice;
+  - il dipendente nelle aziende dei giocatori (dirigenti, stock option) arriverà in Fase 4 e cambierà gli equilibri: rifare il bilanciamento.
 
 ### Fase 3 — Vertical slice giocabile (2 mesi) ⟶ **punto di decisione**
 
@@ -360,4 +366,4 @@ Si raccolgono fin dalla vertical slice:
 
 ## 9. Prossimo passo
 
-Avviare la **Fase 2** (classi, progressione e personaggio).
+Avviare la **Fase 3** (vertical slice giocabile).

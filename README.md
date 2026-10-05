@@ -11,7 +11,8 @@ Gioco di strategia economica multiplayer online, persistente, basato sulle logic
 ## Stato
 
 - Fase 0 (fondamenta) completata.
-- Fase 1 (motore economico offline): economia circolare con mercato causale, filiera dei 9 settori, consumi delle persone, banca, tasse, macroeconomia, eventi e simulatore con bot.
+- Fase 1 completata (motore economico offline): economia circolare con mercato causale, filiera dei 9 settori, consumi delle persone, banca, tasse, macroeconomia, eventi e simulatore con bot.
+- Fase 2 completata: competenze, carriere, ore e benessere, reputazione, tratti, salto di classe, attrezzature, quote delle società, prestiti tra giocatori, immobili; classi bilanciate (20–30% della top 10 ciascuna).
 
 ## Struttura
 

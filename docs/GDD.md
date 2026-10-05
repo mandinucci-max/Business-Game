@@ -1110,15 +1110,17 @@ Valori di partenza per le simulazioni. Nel codice: `config/balance/*.json`.
 
 | Settore       | ε (elasticità) | c_base (churn/mese) | a (qualità)            | b (brand) | e (posizione) | Multiplo di valutazione |
 | ------------- | -------------- | ------------------- | ---------------------- | --------- | ------------- | ----------------------- |
-| Energia       | 0,6            | 1%                  | 0,3                    | 0,2       | 0             | 8×                      |
-| Materie prime | 2,0            | 4%                  | 0,3                    | 0,1       | 0             | 6×                      |
-| Manifattura   | 1,2            | 3%                  | 0,8                    | 0,4       | 0             | 8×                      |
-| Edilizia      | 1,0            | – (a progetto)      | 0,7                    | 0,4       | 0             | 7×                      |
-| Logistica     | 1,5            | 3%                  | 0,6 (affidabilità)     | 0,2       | 0             | 7×                      |
-| Tecnologia    | 0,8            | 6%                  | 1,0                    | 0,6       | 0             | 15×                     |
-| Commercio     | 1,6            | 5%                  | 0,5                    | 0,6       | 0,8           | 8×                      |
-| Ristorazione  | 1,0            | 7%                  | 0,9                    | 0,4       | 0,9           | 7×                      |
-| Finanziario   | 0,7            | 2%                  | 0,4 (rendimento/tasso) | 0,5       | 0,2           | 10×                     |
+| Energia       | 0,6            | 1%                  | 0,3                    | 0,2       | 0             | 6×                      |
+| Materie prime | 2,0            | 4%                  | 0,3                    | 0,1       | 0             | 4×                      |
+| Manifattura   | 1,2            | 3%                  | 0,8                    | 0,4       | 0             | 5×                      |
+| Edilizia      | 1,0            | – (a progetto)      | 0,7                    | 0,4       | 0             | 5×                      |
+| Logistica     | 1,5            | 3%                  | 0,6 (affidabilità)     | 0,2       | 0             | 5×                      |
+| Tecnologia    | 0,8            | 6%                  | 1,0                    | 0,6       | 0             | 8×                      |
+| Commercio     | 1,6            | 5%                  | 0,5                    | 0,6       | 0,8           | 5×                      |
+| Ristorazione  | 1,0            | 7%                  | 0,9                    | 0,4       | 0,9           | 4×                      |
+| Finanziario   | 0,7            | 2%                  | 0,4 (rendimento/tasso) | 0,5       | 0,2           | 7×                      |
+
+La ditta individuale è valutata a 2,5× l'utile annuo in tutti i settori (calibrazione Fase 2). Gli altri parametri economici aggiornati (attrezzature per lavoratore, affitti, overhead) sono in `packages/config/balance/`.
 
 ### A.2 Parametri globali
 
