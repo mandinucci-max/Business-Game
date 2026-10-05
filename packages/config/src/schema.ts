@@ -305,6 +305,8 @@ const progressionSchema = z.strictObject({
     npcJobPartTime: z.int().min(0),
     managementPerCompany: z.int().min(0),
     defaultFreelanceHours: z.int().min(0),
+    /** Ore di coordinamento per ogni collaboratore dello studio. */
+    hoursPerCollaborator: z.int().min(0),
     overtimeWellbeingCostPerHour: z.number().min(0),
   }),
   wellbeing: z.strictObject({

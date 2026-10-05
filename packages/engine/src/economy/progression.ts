@@ -79,6 +79,7 @@ export function committedHours(state: CityState, config: BalanceConfig, player: 
     (player.npcJob?.hours ?? 0) +
     companies.length * hours.managementPerCompany +
     (player.freelance?.hours ?? 0) +
+    (player.freelance?.collaborators ?? 0) * hours.hoursPerCollaborator +
     player.study.hours
   );
 }

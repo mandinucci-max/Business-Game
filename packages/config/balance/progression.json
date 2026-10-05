@@ -32,7 +32,8 @@
     "npcJobPartTime": 80,
     "managementPerCompany": 40,
     "defaultFreelanceHours": 140,
-    "overtimeWellbeingCostPerHour": 0.3
+    "overtimeWellbeingCostPerHour": 0.3,
+    "hoursPerCollaborator": 10
   },
   "wellbeing": {
     "start": 70,
@@ -105,7 +106,7 @@
       "productHours": 200,
       "royaltyStartMonthly": 300,
       "royaltyMonthlyGrowth": 0.05,
-      "royaltyCapMonthly": 1500
+      "royaltyCapMonthly": 1000
     },
     "entrepreneur": {
       "srlCapital": 10000,
