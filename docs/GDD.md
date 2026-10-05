@@ -1,6 +1,6 @@
 # Business Game — Game Design Document
 
-> Titolo provvisorio. Versione 0.2 — documento vivo.
+> Titolo provvisorio. Versione 0.3 — documento vivo.
 > Riferimento unico per design e sviluppo. Il piano di implementazione è in [`PIANO_IMPLEMENTAZIONE.md`](./PIANO_IMPLEMENTAZIONE.md).
 
 **Convenzioni**
@@ -379,7 +379,12 @@ Il costo della vita non si paga "alla città" ma è un **paniere di beni e servi
 
 ### 7.4 Domanda dei personaggi gestiti dal computer
 
-Ogni settore che vende alle persone ha un **minimo fisso di domanda** (popolazione cittadina gestita dal computer), quanto basta perché domanda e offerta si muovano anche con pochi giocatori. **I consumi dei giocatori si sommano sopra.**
+Ogni settore ha un **minimo fisso di domanda** gestito dal computer, quanto basta perché domanda e offerta si muovano anche con pochi giocatori:
+
+- per i settori che vendono alle persone è la popolazione cittadina;
+- per quelli che vendono alle aziende è l'industria cittadina (calibrazione Fase 1: senza questa domanda materie prime, manifattura e logistica restano vuote in una città piccola).
+
+**I consumi dei giocatori e gli acquisti delle aziende dei giocatori si sommano sopra.**
 
 La spesa della popolazione cresce con il monte stipendi pagato in città (moltiplicatore 0,8–1,2), così salari più alti significano più consumi: effetto keynesiano.
 
@@ -437,6 +442,7 @@ Stesso modello, con due differenze:
 ### 9.1 Fondazione
 
 Si scelgono settore e sede; si versa il capitale (o lo si raccoglie da investitori).
+Una ditta nuova parte con una **piccola clientela pari alla sua capacità iniziale**, sottratta all'operatore cittadino, come chi rileva un'attività avviata (calibrazione Fase 1).
 Tempo di avvio: 1 mese di gioco (ridotto dai tratti "Specialista di settore" e "Fondatore di successo").
 
 ### 9.2 Leve dell'imprenditore
@@ -513,9 +519,11 @@ A_job = salario^a · ambiente^b · prestigio^c · carriera^d
 morale = f(salario / media di mercato, carico di ore, leadership, benessere)
 ```
 
-**Lavoratori gestiti dal computer**: disponibili senza limite al salario di mercato, ma con produttività al 70% e nessun bonus.
+**Lavoratori gestiti dal computer**: disponibili al salario di mercato finché ci sono disoccupati in città, con produttività al 70% e nessun bonus.
 
-**Disoccupazione**: chi perde il lavoro riceve un sussidio dalla città pari al 60% dell'ultimo stipendio per 6 mesi (massimo 3.000 Cr/mese).
+**Lavoro presso datori gestiti dal computer**: chiunque non abbia un lavoro può accettarne uno al salario base del dipendente, indicizzato ai costi.
+
+**Disoccupazione**: chi perde il lavoro riceve un sussidio dalla città pari al 60% dell'ultimo stipendio per 6 mesi (massimo 3.000 Cr/mese). In Fase 1 il sussidio è attivo dopo il fallimento personale, pari al 60% del salario base del dipendente.
 
 ### 10.2 Bonus del dipendente giocatore
 
@@ -710,6 +718,22 @@ Nessuna IVA al lancio.
 | Credito creato dalle banche                    | Spese legali e multe                      |
 
 **Stabilizzatore automatico**: obiettivo di inflazione 2% annuo, perseguito tramite il tasso di riferimento e l'adeguamento graduale della domanda della popolazione e degli appalti. Gli indicatori di salute sono monitorati dalle simulazioni.
+
+### 13.2 Dinamiche macro (decise durante la calibrazione della Fase 1)
+
+Le simulazioni con i bot hanno mostrato che servono questi meccanismi perché l'economia resti stabile e credibile:
+
+- **Indice dei costi e curva di Phillips.** Salari di mercato, prezzi dell'operatore cittadino, affitti, stipendi e sussidi dei datori gestiti dal computer crescono con un indice dei costi:
+  ```
+  inflazione dei costi = obiettivo + 0,5 × (disoccupazione obiettivo − disoccupazione)
+  ```
+  limitata tra −2% e +10% annuo. L'inflazione nasce così dalla tensione sul mercato del lavoro. Senza questo meccanismo i prezzi restano fermi e banca centrale e stabilizzatore non hanno nulla da correggere.
+- **Shock trasmessi lungo la filiera.** Il prezzo dell'operatore di un settore incorpora gli shock sugli input, pesati per quota. Esempio: con il raccolto scarso anche i pasti dell'operatore costano di più, quindi le ditte non vengono schiacciate tra input più cari e un tetto di prezzo fermo.
+- **Forza lavoro che si adatta (migrazione).** Una città con poca disoccupazione attira lavoratori, una con troppa li perde: ±1% al mese al massimo, proporzionale alla distanza dall'obiettivo (6%).
+- **Stabilizzatore legato al lavoro.** Aggiunge domanda solo se l'inflazione è bassa **e** c'è disoccupazione sopra l'obiettivo; la toglie solo se l'inflazione è alta **e** il lavoro scarseggia. Intervallo ±10%.
+- **Effetto keynesiano moderato.** Gli stipendi pagati dalle aziende dei giocatori aumentano la domanda della popolazione al massimo del 5%.
+- **Occupazione.** È calcolata dalla produzione: lavoratori delle aziende dei giocatori + lavoratori necessari all'operatore per servire la domanda rimasta a lui. Quando un giocatore conquista clienti, i posti di lavoro si spostano dall'operatore alla sua azienda.
+- **Eventi.** Circa uno ogni quattro mesi; recessione ed espansione non possono essere attive insieme.
 
 ---
 

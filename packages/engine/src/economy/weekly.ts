@@ -221,6 +221,8 @@ function settleSector(ctx: TickContext, sector: SectorId, buyers: readonly Buyer
   const scale = produced > demand && produced > 0 ? demand / produced : 1;
   const sold = new Map(suppliers.map((c) => [c.id, c.output * scale]));
   const playerSales = produced * scale;
+  // Si produce solo ciò che si vende: gli input del tick successivo seguono le vendite.
+  for (const supplier of suppliers) supplier.output = sold.get(supplier.id) ?? 0;
   const servedShare = demand > 0 ? playerSales / demand : 0;
 
   const revenue = new Map<string, Amount>(suppliers.map((c) => [c.id, ZERO]));
