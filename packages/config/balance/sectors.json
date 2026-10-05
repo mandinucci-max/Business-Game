@@ -22,7 +22,8 @@
       "baseRentMonthly": 1500,
       "npcDemandFloorWeekly": 45000,
       "interestRateSensitivity": 0.5,
-      "customers": "mixed"
+      "customers": "mixed",
+      "capexPerWorker": 60000
     }
   },
   "raw_materials": {
@@ -48,7 +49,8 @@
       "baseRentMonthly": 1200,
       "npcDemandFloorWeekly": 9000,
       "interestRateSensitivity": 1.0,
-      "customers": "business"
+      "customers": "business",
+      "capexPerWorker": 25000
     }
   },
   "manufacturing": {
@@ -74,7 +76,8 @@
       "baseRentMonthly": 2500,
       "npcDemandFloorWeekly": 6000,
       "interestRateSensitivity": 1.5,
-      "customers": "business"
+      "customers": "business",
+      "capexPerWorker": 20000
     }
   },
   "construction": {
@@ -101,7 +104,8 @@
       "baseRentMonthly": 1500,
       "npcDemandFloorWeekly": 3000,
       "interestRateSensitivity": 4.0,
-      "customers": "business"
+      "customers": "business",
+      "capexPerWorker": 12000
     }
   },
   "logistics": {
@@ -126,7 +130,8 @@
       "baseRentMonthly": 1500,
       "npcDemandFloorWeekly": 18000,
       "interestRateSensitivity": 1.0,
-      "customers": "business"
+      "customers": "business",
+      "capexPerWorker": 15000
     }
   },
   "technology": {
@@ -150,7 +155,8 @@
       "baseRentMonthly": 1500,
       "npcDemandFloorWeekly": 7500,
       "interestRateSensitivity": 1.0,
-      "customers": "mixed"
+      "customers": "mixed",
+      "capexPerWorker": 5000
     }
   },
   "retail": {
@@ -176,7 +182,8 @@
       "baseRentMonthly": 1800,
       "npcDemandFloorWeekly": 36000,
       "interestRateSensitivity": 1.0,
-      "customers": "consumer"
+      "customers": "consumer",
+      "capexPerWorker": 8000
     }
   },
   "food_service": {
@@ -202,7 +209,8 @@
       "baseRentMonthly": 1200,
       "npcDemandFloorWeekly": 60000,
       "interestRateSensitivity": 0.8,
-      "customers": "consumer"
+      "customers": "consumer",
+      "capexPerWorker": 8000
     }
   },
   "finance": {
@@ -226,7 +234,8 @@
       "baseRentMonthly": 2000,
       "npcDemandFloorWeekly": 7500,
       "interestRateSensitivity": 2.0,
-      "customers": "mixed"
+      "customers": "mixed",
+      "capexPerWorker": 8000
     }
   }
 }

@@ -167,6 +167,8 @@ export function foundCompany(
     output: 0,
     lastOutput: 0,
     equipment: credits(params.equipment),
+    shares: { [params.ownerId]: 1 },
+    equityOffer: null,
     creditRating: params.creditRating,
     month: { revenue: ZERO, costs: ZERO, debtService: ZERO },
     lastMonth: { revenue: ZERO, costs: ZERO },

@@ -20,6 +20,7 @@ import {
   unlockBlocker,
 } from './economy/progression';
 import { unitPrice } from './economy/realEstate';
+import { requiredEquipment } from './economy/sector';
 import { addLoan, foundCompany, joinPlayer, maxWorkers } from './economy/setup';
 import { receiveFromOutside, transfer } from './economy/settle';
 import { type Command, CommandRejectedError } from './command-core';
@@ -75,6 +76,14 @@ const schemas = {
     workers: z.int().min(0),
     wage: positiveCredits,
   }),
+  'company.buyEquipment': z.strictObject({ companyId, amount: positiveCredits }),
+  'equity.offer': z.strictObject({
+    companyId,
+    share: z.number().finite().gt(0).max(0.49),
+    price: positiveCredits,
+  }),
+  'equity.cancel': z.strictObject({ companyId }),
+  'equity.buy': z.strictObject({ companyId, share: z.number().finite().gt(0).max(0.49) }),
   'company.transferCash': z.strictObject({
     companyId,
     direction: z.enum(['deposit', 'withdraw']),
@@ -174,6 +183,20 @@ function requireAffordable(
   if (existing + payment > income * config.economy.bank.maxDebtServiceRatio) {
     throw new CommandRejectedError('Le rate supererebbero il limite rispetto al reddito');
   }
+}
+
+/** Acquisto di attrezzature dai fornitori gestiti dal computer (il denaro esce dal sistema). */
+function buyEquipment(ctx: TickContext, company: Company, value: Amount): void {
+  requireCash(ctx, company.account, value);
+  ctx.post({
+    kind: 'sink',
+    reason: 'company:equipment',
+    postings: [
+      { account: company.account, amount: amount(-value) },
+      { account: SINK_ACCOUNT, amount: value },
+    ],
+  });
+  company.equipment = amount(company.equipment + value);
 }
 
 const LEGAL_RANK: Record<LegalForm, number> = {
@@ -399,16 +422,74 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
     ctx.emit({ type: 'company_incorporated', companyId: company.id, legalForm: payload.legalForm });
   }),
 
+  // Il dividendo va a tutti i soci in proporzione alle quote.
   'company.payDividend': handler('company.payDividend', (ctx, command, payload) => {
+    const { state } = ctx;
     const company = requireOwnedCompany(ctx, command, payload.companyId);
-    const player = requirePlayer(ctx, command);
     if (company.legalForm === 'sole_proprietorship') {
       throw new CommandRejectedError('La ditta individuale usa i prelievi');
     }
     const value = credits(payload.amount);
     requireCash(ctx, company.account, value);
-    transfer(ctx, company.account, player.account, value, 'company:dividend');
-    player.month.capitalIncome = amount(player.month.capitalIncome + value);
+    const holders = Object.entries(company.shares).filter(
+      ([id, share]) => share > 0 && state.players[id],
+    );
+    let paid = 0;
+    holders.forEach(([id, share], i) => {
+      const holder = state.players[id] as Player;
+      const part = i === holders.length - 1 ? value - paid : Math.floor(value * share);
+      if (part > 0) {
+        transfer(ctx, company.account, holder.account, amount(part), 'company:dividend');
+        holder.month.capitalIncome = amount(holder.month.capitalIncome + part);
+        paid += part;
+      }
+    });
+  }),
+
+  // Raccolta di capitale (GDD §5.2): il titolare vende quote, deve restare sopra il 50%.
+  'equity.offer': handler('equity.offer', (ctx, command, payload) => {
+    const company = requireOwnedCompany(ctx, command, payload.companyId);
+    if (company.legalForm === 'sole_proprietorship') {
+      throw new CommandRejectedError('Solo le società possono vendere quote');
+    }
+    const ownerShare = company.shares[company.ownerId] ?? 0;
+    if (ownerShare * (1 - payload.share) < 0.5) {
+      throw new CommandRejectedError('Il titolare deve mantenere almeno il 50%');
+    }
+    company.equityOffer = { share: payload.share, price: credits(payload.price) };
+  }),
+
+  'equity.cancel': handler('equity.cancel', (ctx, command, payload) => {
+    requireOwnedCompany(ctx, command, payload.companyId).equityOffer = null;
+  }),
+
+  'equity.buy': handler('equity.buy', (ctx, command, payload) => {
+    const { state } = ctx;
+    const buyer = requirePlayer(ctx, command);
+    requireClass(buyer, 'investor', 'Comprare quote');
+    const company = Object.hasOwn(state.companies, payload.companyId)
+      ? state.companies[payload.companyId]
+      : undefined;
+    const offer = company?.equityOffer ?? null;
+    if (company === undefined || company.status !== 'active' || offer === null) {
+      throw new CommandRejectedError('Nessuna quota in vendita');
+    }
+    if (company.ownerId === buyer.id) throw new CommandRejectedError('Sei già il titolare');
+    if (payload.share > offer.share + 1e-9) throw new CommandRejectedError('Quota oltre l’offerta');
+    const cost = amount(Math.round((offer.price * payload.share) / offer.share));
+    requireCash(ctx, buyer.account, cost);
+    transfer(ctx, buyer.account, company.account, cost, 'equity:capital_increase');
+    // Aumento di capitale: le nuove quote diluiscono in proporzione tutti i soci esistenti.
+    for (const id of Object.keys(company.shares)) {
+      company.shares[id] = (company.shares[id] ?? 0) * (1 - payload.share);
+    }
+    company.shares[buyer.id] = (company.shares[buyer.id] ?? 0) + payload.share;
+    const remaining = offer.share - payload.share;
+    company.equityOffer =
+      remaining > 1e-6 ? { share: remaining, price: amount(offer.price - cost) } : null;
+    buyer.network += 1;
+    const owner = state.players[company.ownerId];
+    if (owner !== undefined) owner.network += 1;
   }),
 
   'company.setPrice': handler('company.setPrice', (ctx, command, payload) => {
@@ -443,10 +524,23 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
     const hires = payload.workers - company.npcWorkers;
     const available = Math.floor(Math.max(0, macro.laborForce - macro.employment));
     if (hires > available) throw new CommandRejectedError('Non ci sono abbastanza disoccupati');
+    // Chi assume deve avere le attrezzature: la differenza si compra subito dalla cassa.
+    if (hires > 0) {
+      const needed = credits(
+        requiredEquipment(ctx.state, ctx.config, company.sector, payload.workers),
+      );
+      const missing = amount(Math.max(0, needed - company.equipment));
+      if (missing > 0) buyEquipment(ctx, company, missing);
+    }
     company.npcWorkers = payload.workers;
     company.wage = credits(payload.wage);
     macro.employment += hires;
     macro.unemployment = Math.max(0, 1 - macro.employment / macro.laborForce);
+  }),
+
+  'company.buyEquipment': handler('company.buyEquipment', (ctx, command, payload) => {
+    const company = requireOwnedCompany(ctx, command, payload.companyId);
+    buyEquipment(ctx, company, credits(payload.amount));
   }),
 
   'company.transferCash': handler('company.transferCash', (ctx, command, payload) => {

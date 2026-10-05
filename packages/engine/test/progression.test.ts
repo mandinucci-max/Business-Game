@@ -227,3 +227,64 @@ describe('immobili', () => {
     expect(result.report.rejectedCommands[0]?.message).toMatch(/livello/);
   });
 });
+
+describe('quote delle società', () => {
+  it("l'investitore compra quote, il denaro entra nella società e i dividendi si dividono", () => {
+    let state = city(entrepreneur, investor);
+    player(state, 'ent').skills.management = xpForLevel(config, 4);
+    state = run(state, [
+      cmd('d', 'ent', 'company.transferCash', {
+        companyId: 'c1',
+        direction: 'deposit',
+        amount: 4500,
+      }),
+      cmd('i', 'ent', 'company.incorporate', { companyId: 'c1', legalForm: 'srl' }),
+      cmd('o', 'ent', 'equity.offer', { companyId: 'c1', share: 0.2, price: 10_000 }),
+    ]).state;
+    expect(
+      run(state, [cmd('x', 'ent', 'equity.offer', { companyId: 'c1', share: 0.6, price: 1 })])
+        .report.rejectedCommands,
+    ).toHaveLength(1);
+
+    const cashBefore = balanceOf(state.ledger, 'company:c1');
+    const bought = run(state, [cmd('b', 'inv', 'equity.buy', { companyId: 'c1', share: 0.1 })]);
+    expect(bought.report.rejectedCommands).toEqual([]);
+    const company = bought.state.companies.c1;
+    expect(company?.shares.inv).toBeCloseTo(0.1);
+    expect(company?.shares.ent).toBeCloseTo(0.9);
+    expect(company?.equityOffer?.share).toBeCloseTo(0.1);
+    expect(balanceOf(bought.state.ledger, 'company:c1') - cashBefore).toBeGreaterThan(0);
+
+    const investorCash = toCredits(balanceOf(bought.state.ledger, 'player:inv'));
+    const dividend = run(bought.state, [
+      cmd('v', 'ent', 'company.payDividend', { companyId: 'c1', amount: 1000 }),
+    ]);
+    expect(dividend.report.rejectedCommands).toEqual([]);
+    const received = dividend.report.transactions
+      .filter((t) => t.reason === 'company:dividend')
+      .flatMap((t) => t.postings)
+      .filter((p) => p.account === 'player:inv')
+      .reduce((sum, p) => sum + toCredits(p.amount), 0);
+    expect(received).toBeCloseTo(100, 0);
+    expect(toCredits(balanceOf(dividend.state.ledger, 'player:inv'))).toBeLessThan(
+      investorCash + 100,
+    );
+    expect(checkLedgerInvariants(dividend.state.ledger)).toEqual([]);
+  });
+
+  it('solo un investitore può comprare quote', () => {
+    const state = city(entrepreneur, employee);
+    player(state, 'ent').skills.management = xpForLevel(config, 4);
+    const ready = run(state, [
+      cmd('d', 'ent', 'company.transferCash', {
+        companyId: 'c1',
+        direction: 'deposit',
+        amount: 4500,
+      }),
+      cmd('i', 'ent', 'company.incorporate', { companyId: 'c1', legalForm: 'srl' }),
+      cmd('o', 'ent', 'equity.offer', { companyId: 'c1', share: 0.2, price: 10_000 }),
+    ]).state;
+    const result = run(ready, [cmd('b', 'emp', 'equity.buy', { companyId: 'c1', share: 0.1 })]);
+    expect(result.report.rejectedCommands[0]?.message).toMatch(/investor/);
+  });
+});

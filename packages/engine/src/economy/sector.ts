@@ -23,6 +23,16 @@ export function operatorPrice(state: CityState, config: BalanceConfig, sector: S
   );
 }
 
+/** Attrezzature necessarie per un certo numero di lavoratori, indicizzate ai costi. */
+export function requiredEquipment(
+  state: CityState,
+  config: BalanceConfig,
+  sector: SectorId,
+  workers: number,
+): number {
+  return workers * config.sectors[sector].economics.capexPerWorker * state.macro.costIndex;
+}
+
 /** Salario di mercato di un lavoratore, indicizzato ai costi. */
 export function marketWage(state: CityState, config: BalanceConfig, sector: SectorId): number {
   return config.sectors[sector].economics.npcWageMonthly * state.macro.costIndex;

@@ -20,6 +20,7 @@ import {
   inputRequirements,
   marketParams,
   marketWage,
+  requiredEquipment,
   marketAccount,
   operatorPrice,
   referenceWeeklyRevenue,
@@ -111,11 +112,17 @@ export function updateCapacity(ctx: TickContext): void {
               (Math.max(1, workers) * labour.trainingReferencePerWorkerWeekly),
           ));
     const bonus = ownerBonuses(state, config, company);
+    // Senza attrezzature sufficienti i lavoratori rendono meno (GDD §9.2).
+    const needed = requiredEquipment(state, config, company.sector, workers);
+    const coverage = needed > 0 ? Math.min(1, toCredits(company.equipment) / needed) : 1;
+    const floor = market.minimumEquipmentCoverage;
+    const equipmentFactor = floor + (1 - floor) * coverage;
     company.capacity =
       workers *
       unitsPerNpcWorkerWeek(config, company.sector) *
       company.morale *
       training *
+      equipmentFactor *
       bonus.capacity *
       (1 -
         bonus.overhead *

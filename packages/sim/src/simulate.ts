@@ -59,6 +59,8 @@ export interface PlayerOutcome {
   readonly strategy: Strategy['name'];
   readonly economicValue: number;
   readonly bankruptcies: number;
+  /** Mese del primo salto (promozione, classe sbloccata, società); null se non c'è stato. */
+  readonly firstUpgradeMonth: number | null;
 }
 
 export interface SeasonResult {
@@ -160,6 +162,7 @@ export function runSeason(options: ScenarioOptions, config: BalanceConfig): Seas
   const rejectionSamples: string[] = [];
   let rejected = 0;
   let bankrupt = 0;
+  const firstUpgrade = new Map<string, number>();
 
   for (let tick = 0; tick < months * ticksPerMonth; tick++) {
     const commands: Command[] = bots.flatMap((bot) => decide(bot, state, config, rng));
@@ -178,6 +181,17 @@ export function runSeason(options: ScenarioOptions, config: BalanceConfig): Seas
       }
     }
     bankrupt += result.report.events.filter((e) => e.type === 'company_bankrupt').length;
+    for (const event of result.report.events) {
+      const playerId =
+        event.type === 'promotion' || event.type === 'class_unlocked'
+          ? String(event.playerId)
+          : event.type === 'company_incorporated'
+            ? state.companies[String(event.companyId)]?.ownerId
+            : undefined;
+      if (playerId !== undefined && !firstUpgrade.has(playerId)) {
+        firstUpgrade.set(playerId, result.report.date.monthIndex + 1);
+      }
+    }
     if (result.report.date.isMonthEnd) {
       snapshots.push(snapshot(state, result.report.date.monthIndex + 1));
     }
@@ -191,6 +205,7 @@ export function runSeason(options: ScenarioOptions, config: BalanceConfig): Seas
       strategy: bot.strategy.name,
       economicValue: toCredits(economicValue(state, config, bot.playerId)),
       bankruptcies: state.players[bot.playerId]?.bankruptcies ?? 0,
+      firstUpgradeMonth: firstUpgrade.get(bot.playerId) ?? null,
     }));
 
   return {

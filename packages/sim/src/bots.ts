@@ -1,4 +1,4 @@
-import type { BalanceConfig, ClassId, SectorId } from '@business-game/config';
+import type { BalanceConfig, ClassId, SectorId, SkillId } from '@business-game/config';
 import {
   type CityState,
   type Command,
@@ -6,7 +6,18 @@ import {
   type Player,
   type Rng,
   balanceOf,
+  committedHours,
+  hasClass,
+  hourLimit,
   inputRequirements,
+  investorLevel,
+  lendingRate,
+  rentalMarket,
+  roleSkillOf,
+  skillLevel,
+  unitPrice,
+  unitRent,
+  unlockBlocker,
   marketWage,
   operatorPrice,
   toCredits,
@@ -213,16 +224,16 @@ function managePersonalFinance(
   let cash = toCredits(balanceOf(state.ledger, player.account));
   const fund = toCredits(balanceOf(state.ledger, player.fundAccount));
 
-  // Il titolare preleva dalla ditta quanto serve per vivere più una quota dell'utile.
+  // Il titolare preleva quanto serve per vivere più una quota dell'utile:
+  // dalla ditta con un prelievo, dalle società con un dividendo.
   for (const company of companies) {
-    if (company.legalForm !== 'sole_proprietorship') continue;
     const companyCash = toCredits(balanceOf(state.ledger, company.account));
     // Riserva: una parte dei costi fissi del mese (salari, affitto); gli input si pagano coi ricavi.
     const economics = config.sectors[company.sector].economics;
     const fixedCosts =
       toCredits(company.wage) * company.npcWorkers +
       economics.baseRentMonthly * state.macro.costIndex * (1 + 0.1 * company.npcWorkers);
-    const reserve = fixedCosts * 0.3;
+    const reserve = fixedCosts * (company.legalForm === 'sole_proprietorship' ? 0.3 : 0.6);
     const profit = Math.max(
       0,
       toCredits(company.lastMonth.revenue) - toCredits(company.lastMonth.costs),
@@ -230,11 +241,15 @@ function managePersonalFinance(
     const wanted = Math.max(0, need - cash) + profit * strategy.drawShare;
     const draw = Math.min(wanted, companyCash - reserve);
     if (draw > 50) {
-      add('company.transferCash', {
-        companyId: company.id,
-        direction: 'withdraw',
-        amount: round2(draw),
-      });
+      if (company.legalForm === 'sole_proprietorship') {
+        add('company.transferCash', {
+          companyId: company.id,
+          direction: 'withdraw',
+          amount: round2(draw),
+        });
+      } else {
+        add('company.payDividend', { companyId: company.id, amount: round2(draw) });
+      }
       cash += draw;
     }
   }
@@ -252,8 +267,10 @@ function managePersonalFinance(
   );
   const reserveForDebt =
     bullet !== undefined && bullet.remainingMonths <= 2 ? toCredits(bullet.principal) * 1.02 : 0;
-
   const buffer = living * strategy.bufferMonths + reserveForDebt;
+
+  cash = manageCareer(bot, player, companies, state, config, add, rng, cash, buffer, fund);
+
   if (cash > buffer + 100) {
     add('fund.invest', { amount: round2(cash - buffer) });
   } else if (cash < buffer * 0.5 && fund > 0) {
@@ -271,6 +288,209 @@ function managePersonalFinance(
     add('player.setLifestyle', { level: player.lifestyleLevel + 1 });
   }
 }
+
+/** Obiettivo di studio per classe: la competenza che sblocca il prossimo passo di carriera. */
+function studyTarget(config: BalanceConfig, player: Player): SkillId | null {
+  const level = (skill: SkillId) => skillLevel(config, player, skill);
+  const role = roleSkillOf(config, player);
+  const goals: [SkillId, number][] = [];
+  if (hasClass(player, 'employee') && role !== null) goals.push([role, 7], ['management', 7]);
+  if (hasClass(player, 'freelancer') && role !== null) goals.push([role, 8], ['management', 3]);
+  if (hasClass(player, 'entrepreneur')) goals.push(['management', 6], ['commercial', 6]);
+  if (hasClass(player, 'investor')) goals.push(['finance', 8]);
+  goals.push(['finance', 3], ['management', 3]);
+  const next = goals.find(([skill, target]) => level(skill) < target);
+  return next?.[0] ?? null;
+}
+
+/**
+ * Carriera: studio, salti di classe, crescita dell'attività, investimenti. Restituisce la
+ * liquidità rimasta dopo gli impegni presi in questo turno.
+ */
+function manageCareer(
+  bot: BotProfile,
+  player: Player,
+  companies: Company[],
+  state: CityState,
+  config: BalanceConfig,
+  add: Add,
+  rng: Rng,
+  available: number,
+  buffer: number,
+  fund: number,
+): number {
+  const { strategy } = bot;
+  let cash = available;
+  const p = config.progression;
+
+  // Studio: le ore libere, con un margine che dipende dalla propensione al rischio e dal benessere.
+  const target = studyTarget(config, player);
+  const free =
+    hourLimit(config, player) -
+    committedHours(state, config, player) +
+    player.study.hours -
+    (strategy.name === 'aggressive' ? 0 : 60);
+  const hours =
+    target === null || player.wellbeing < 45 ? 0 : Math.max(0, Math.floor(free / 10) * 10);
+  const studyCost = hours * p.skills.studyCostPerHour * state.macro.costIndex;
+  if (target !== null && cash > studyCost + buffer * 0.5) {
+    if (hours !== player.study.hours || target !== player.study.skill) {
+      add('skill.setStudy', { skill: target, hours });
+    }
+    cash -= studyCost;
+  } else if (player.study.hours > 0) {
+    add('skill.setStudy', { skill: player.study.skill ?? 'management', hours: 0 });
+  }
+
+  // Salti di classe.
+  const wantsBusiness =
+    strategy.name === 'aggressive' || (strategy.name === 'random' && rng.chance(0.5));
+  if (
+    !hasClass(player, 'entrepreneur') &&
+    wantsBusiness &&
+    unlockBlocker(state, config, player, 'entrepreneur') === null &&
+    cash > p.unlock.entrepreneur.cash + buffer
+  ) {
+    add('class.unlock', { classId: 'entrepreneur' });
+    const sector = STARTERS[Math.floor(rng.next() * STARTERS.length)] as SectorId;
+    const capital = p.careers.entrepreneur.soleProprietorshipCapital * 1.5;
+    add('company.found', { sector, legalForm: 'sole_proprietorship', capital });
+    cash -= capital;
+  }
+  if (!hasClass(player, 'investor') && unlockBlocker(state, config, player, 'investor') === null) {
+    add('class.unlock', { classId: 'investor' });
+  }
+
+  // Libero professionista: studio associato e prodotto quando le competenze lo permettono.
+  const practice = player.freelance;
+  if (practice !== null) {
+    if (
+      practice.collaborators < p.careers.freelancer.maxCollaborators &&
+      skillLevel(config, player, 'management') >= p.careers.freelancer.studioManagement
+    ) {
+      add('freelance.setCollaborators', { count: practice.collaborators + 1 });
+    }
+    const role = roleSkillOf(config, player);
+    if (
+      practice.productHoursLeft === null &&
+      practice.royaltyMonthly === 0 &&
+      role !== null &&
+      skillLevel(config, player, role) >= p.careers.freelancer.productSkill
+    ) {
+      add('freelance.startProduct', {});
+    }
+    if (practice.hours === 0 && hasClass(player, 'freelancer')) {
+      const room = hourLimit(config, player) - committedHours(state, config, player) - 40;
+      if (room >= 40) add('freelance.setHours', { hours: Math.min(120, room) });
+    }
+  }
+
+  // Imprenditore: la ditta diventa SRL, poi SPA; con capitale si apre una seconda azienda.
+  const management = skillLevel(config, player, 'management');
+  const e = p.careers.entrepreneur;
+  for (const company of companies) {
+    const companyCash = toCredits(balanceOf(state.ledger, company.account));
+    if (
+      company.legalForm === 'sole_proprietorship' &&
+      management >= e.srlManagement &&
+      companyCash > e.srlCapital
+    ) {
+      add('company.incorporate', { companyId: company.id, legalForm: 'srl' });
+    } else if (
+      company.legalForm === 'srl' &&
+      management >= e.spaManagement &&
+      companyCash + toCredits(company.equipment) > e.spaCapital &&
+      company.profitHistory.filter((x) => x > 0).length >= e.spaProfitableMonths
+    ) {
+      add('company.incorporate', { companyId: company.id, legalForm: 'spa' });
+    }
+  }
+  if (
+    hasClass(player, 'entrepreneur') &&
+    companies.length > 0 &&
+    companies.length < (strategy.name === 'aggressive' ? 3 : 2) &&
+    management >= e.srlManagement &&
+    cash > e.srlCapital * 1.5 + buffer &&
+    player.wellbeing > 55
+  ) {
+    const owned = new Set(companies.map((c) => c.sector));
+    const options = GROWTH_SECTORS.filter((s) => !owned.has(s));
+    const sector = options[Math.floor(rng.next() * options.length)];
+    if (sector !== undefined) {
+      add('company.found', { sector, legalForm: 'srl', capital: e.srlCapital * 1.5 });
+      cash -= e.srlCapital * 1.5;
+    }
+  }
+
+  // Investitore: immobili se rendono più del fondo, prestiti agli altri giocatori.
+  if (hasClass(player, 'investor')) {
+    const level = p.careers.investor[investorLevel(state, config, player)];
+    const owned = player.properties.residential + player.properties.commercial;
+    const investable = cash + fund - buffer;
+    for (const kind of ['residential', 'commercial'] as const) {
+      const price = unitPrice(state, config, kind) * (1 + p.realEstate.transactionFee);
+      const market = rentalMarket(state, config, kind);
+      const yieldRate =
+        (unitRent(state, config, kind) *
+          12 *
+          (1 - p.realEstate.maintenanceShare) *
+          Math.max(0.5, market.occupancy)) /
+        price;
+      const fundRate = state.macro.policyRate + config.economy.indexFund.equityPremium;
+      if (
+        yieldRate > fundRate * 0.9 &&
+        market.occupancy > 0.95 &&
+        owned < (level?.maxPropertyUnits ?? 0) &&
+        investable > price
+      ) {
+        if (cash < price + buffer) {
+          add('fund.redeem', { amount: round2(Math.min(fund, price + buffer - cash)) });
+          cash = price + buffer;
+        }
+        add('property.buy', { kind, units: 1 });
+        cash -= price;
+        break;
+      }
+    }
+    const myOffers = Object.values(state.loanOffers).filter((o) => o.lenderId === player.id);
+    const lendable = Math.min(level?.maxPeerLoan ?? 0, (cash + fund - buffer) * 0.3);
+    if (myOffers.length === 0 && lendable > 2000) {
+      const rate = (lendingRate(state, config, 'BBB') ?? 0.06) - 0.005;
+      add('loan.offer', {
+        amount: round2(lendable),
+        annualRate: round2(rate * 1000) / 1000,
+        months: 36,
+      });
+    }
+  }
+
+  // Chi ha bisogno di capitale (imprenditori pronti a crescere) prende il prestito più economico.
+  if (hasClass(player, 'entrepreneur') && companies.length > 0 && cash < e.srlCapital) {
+    const ownRate = lendingRate(state, config, player.creditRating);
+    const offers = Object.values(state.loanOffers)
+      .filter((o) => o.lenderId !== player.id && (ownRate === null || o.annualRate < ownRate))
+      .sort((a, b) => a.annualRate - b.annualRate);
+    const best = offers[0];
+    const income = toCredits(player.lastMonthIncome);
+    const amountWanted = Math.min(toCredits(best?.available ?? (0 as never)), income * 6);
+    if (best !== undefined && amountWanted > 1000) {
+      add('loan.acceptOffer', { offerId: best.id, amount: round2(amountWanted) });
+      cash += amountWanted;
+    }
+  }
+  return cash;
+}
+
+const STARTERS: readonly SectorId[] = ['logistics', 'technology', 'retail', 'food_service'];
+const GROWTH_SECTORS: readonly SectorId[] = [
+  'raw_materials',
+  'manufacturing',
+  'construction',
+  'logistics',
+  'technology',
+  'retail',
+  'food_service',
+];
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;

@@ -40,9 +40,10 @@ export function netWorth(state: CityState, config: BalanceConfig, playerId: stri
       outstandingDebt(state, 'player', player.id) -
       player.arrears,
   );
-  for (const companyId of player.companyIds) {
-    const company = state.companies[companyId];
-    if (company !== undefined) total = add(total, companyValue(state, config, company));
+  // Aziende possedute in tutto o in parte, in proporzione alle quote.
+  for (const company of Object.values(state.companies)) {
+    const share = company.shares[player.id] ?? 0;
+    if (share > 0) total = add(total, multiply(companyValue(state, config, company), share));
   }
   // Crediti verso altri giocatori e immobili.
   for (const loan of Object.values(state.loans)) {

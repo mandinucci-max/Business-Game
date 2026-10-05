@@ -69,6 +69,8 @@ const sectorSchema = z.strictObject({
     interestRateSensitivity: z.number().min(0),
     /** A chi vende: persone, aziende o entrambi (le persone comprano solo dai mercati non "business"). */
     customers: z.enum(['consumer', 'business', 'mixed']),
+    /** Attrezzature necessarie per ogni lavoratore: crescere richiede capitale. */
+    capexPerWorker: z.number().min(0),
   }),
 });
 
@@ -189,6 +191,9 @@ const economySchema = z.strictObject({
     overheadReferenceWorkers: positive,
     maxOverhead: share,
     rentPerWorkerFactor: z.number().min(0),
+    equipmentMonthlyDepreciation: share,
+    /** Capacità minima (in quota) quando le attrezzature non bastano per tutti i lavoratori. */
+    minimumEquipmentCoverage: share,
   }),
   labour: z.strictObject({
     startingUnemployment: share,

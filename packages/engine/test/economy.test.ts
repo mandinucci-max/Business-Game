@@ -62,7 +62,7 @@ function playMonths(initial: CityState, months: number): CityState {
           amount: 2500,
         }),
         cmd('price', 'ent', 'company.setPrice', { companyId: 'c1', price: 19 }),
-        cmd('hire', 'ent', 'company.setWorkforce', { companyId: 'c1', workers: 5, wage: 1800 }),
+        cmd('hire', 'ent', 'company.setWorkforce', { companyId: 'c1', workers: 3, wage: 1800 }),
         cmd('fund', 'inv', 'fund.invest', { amount: 30_000 }),
       );
     }
@@ -204,7 +204,7 @@ describe('fallimento', () => {
     // Salari altissimi: la ditta non riesce a pagarli.
     let current = runTick(
       state,
-      [cmd('w', 'ent', 'company.setWorkforce', { companyId: 'c1', workers: 5, wage: 18_000 })],
+      [cmd('w', 'ent', 'company.setWorkforce', { companyId: 'c1', workers: 3, wage: 18_000 })],
       config,
     ).state;
     const events: string[] = [];
@@ -224,7 +224,7 @@ describe('fallimento', () => {
     const { state } = start();
     let current = runTick(
       state,
-      [cmd('w', 'ent', 'company.setWorkforce', { companyId: 'c1', workers: 5, wage: 18_000 })],
+      [cmd('w', 'ent', 'company.setWorkforce', { companyId: 'c1', workers: 3, wage: 18_000 })],
       config,
     ).state;
     for (let i = 0; i < 24; i++) current = runTick(current, [], config).state;

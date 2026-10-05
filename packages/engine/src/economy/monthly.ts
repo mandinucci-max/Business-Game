@@ -98,6 +98,13 @@ export function monthlyPayments(ctx: TickContext): void {
         (1 + config.economy.market.rentPerWorkerFactor * company.npcWorkers),
     );
     settle(ctx, company, [{ to: SINK_ACCOUNT, amount: wages }], 'payroll');
+    // Ammortamento: le attrezzature perdono valore ed è un costo (non un'uscita di cassa).
+    const depreciation = multiply(
+      company.equipment,
+      config.economy.market.equipmentMonthlyDepreciation,
+    );
+    company.equipment = amount(company.equipment - depreciation);
+    company.month.costs = add(company.month.costs, depreciation);
     payRent(ctx, company, rent, 'commercial', offices.playerShare, 'rent:office');
     company.month.costs = add(company.month.costs, add(wages, rent));
     state.macro.npcPayrollThisMonth = add(state.macro.npcPayrollThisMonth, wages);

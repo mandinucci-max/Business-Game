@@ -23,7 +23,9 @@
     "overheadBase": 0.05,
     "overheadReferenceWorkers": 20,
     "maxOverhead": 0.5,
-    "rentPerWorkerFactor": 0.1
+    "rentPerWorkerFactor": 0.1,
+    "equipmentMonthlyDepreciation": 0.01,
+    "minimumEquipmentCoverage": 0.5
   },
   "labour": {
     "startingUnemployment": 0.06,

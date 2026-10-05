@@ -41,11 +41,15 @@ export function buildReport(
   const failureRates: number[] = [];
   const liveSectors: number[] = [];
   const violations: string[] = [];
+  const upgrades: number[] = [];
+  let totalPlayers = 0;
 
   for (const result of results) {
     const ranked = [...result.outcomes].sort((a, b) => b.economicValue - a.economicValue);
     for (const outcome of ranked.slice(0, 10)) topTen[outcome.classId] += 1;
     for (const outcome of result.outcomes) {
+      totalPlayers += 1;
+      if (outcome.firstUpgradeMonth !== null) upgrades.push(outcome.firstUpgradeMonth);
       values[outcome.classId].push(outcome.economicValue);
       const list = byStrategy.get(outcome.strategy) ?? [];
       list.push(outcome.economicValue);
@@ -84,16 +88,7 @@ export function buildReport(
     ),
     rangeCheck('Disoccupazione media', mean(unemployment), targets.unemployment, true),
     ...CLASS_IDS.map((c) =>
-      rangeCheck(
-        `Quota top 10: ${c}`,
-        classTopTenShare[c],
-        targets.topTenShareByOriginClass,
-        true,
-        {
-          note: 'obiettivo della Fase 2 (classi e progressione)',
-          informative: true,
-        },
-      ),
+      rangeCheck(`Quota top 10: ${c}`, classTopTenShare[c], targets.topTenShareByOriginClass, true),
     ),
     rangeCheck(
       'Fallimenti di aziende per stagione',
@@ -120,12 +115,17 @@ export function buildReport(
       note: 'si valuta dalla Fase 2',
       informative: true,
     }),
+    rangeCheck(
+      'Mesi al primo salto di livello (mediana)',
+      median(upgrades),
+      targets.monthsToFirstUpgrade,
+      false,
+    ),
     {
-      name: 'Mesi al primo salto di livello',
-      value: 'n/d',
-      target: `${targets.monthsToFirstUpgrade.min}–${targets.monthsToFirstUpgrade.max}`,
+      name: 'Giocatori con almeno un salto di livello',
+      value: `${((upgrades.length / Math.max(1, totalPlayers)) * 100).toFixed(0)}%`,
+      target: 'informativo',
       status: 'n/d',
-      note: 'la progressione arriva in Fase 2',
     },
   ];
 

@@ -125,6 +125,10 @@ export interface Company extends Debtor {
   output: number;
   lastOutput: number;
   equipment: Amount;
+  /** Quote della società per giocatore (somma 1). La ditta individuale resta tutta del titolare. */
+  shares: Record<PlayerId, number>;
+  /** Quote messe in vendita dal titolare per raccogliere capitale (GDD §5.2, business angel). */
+  equityOffer: { share: number; price: Amount } | null;
   creditRating: CreditRating;
   month: { revenue: Amount; costs: Amount; debtService: Amount };
   lastMonth: { revenue: Amount; costs: Amount };
