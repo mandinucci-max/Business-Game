@@ -1,0 +1,9 @@
+{
+  "topTenShareByOriginClass": { "min": 0.2, "max": 0.3 },
+  "annualInflation": { "min": 0, "max": 0.05 },
+  "unemployment": { "min": 0.03, "max": 0.12 },
+  "minSectorsWithPlayerCompanyByMonth24": 7,
+  "companyFailureRatePerSeason": { "min": 0.1, "max": 0.25 },
+  "monthsToFirstUpgrade": { "min": 6, "max": 18 },
+  "netWorthGini": { "min": 0.5, "max": 0.75 }
+}

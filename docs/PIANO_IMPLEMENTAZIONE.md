@@ -28,21 +28,23 @@
 ## 2. Architettura
 
 ### 2.1 Stack
-| Componente | Scelta | Motivo |
-|---|---|---|
-| Linguaggio | **TypeScript** ovunque | Motore condiviso tra server, simulatore e client |
-| Organizzazione del codice | Monorepo con npm workspaces | Pacchetti separati, un solo repository |
-| Motore | Libreria TypeScript pura, **deterministica**, senza I/O | Testabile, riproducibile, eseguibile nel simulatore e nel server |
-| Server | Node.js + Fastify, un unico servizio (monolite) | Facile da gestire da soli |
-| Database | PostgreSQL | Stato, registro dei comandi, classifiche |
-| Scheduler e code | **pg-boss** (code su PostgreSQL) | Tick a orari fissi senza aggiungere Redis |
-| Tempo reale | WebSocket dal server | Aggiornamenti di borsa, notifiche, messaggi |
-| Client | **React + Vite, web app responsive** con rilevamento del dispositivo, installabile (PWA) | Una sola interfaccia per mobile e computer, senza app native |
-| Lingue | i18next, italiano e inglese dal primo giorno | Aggiungere le traduzioni dopo costa molto di più |
-| Amministrazione | Sezione riservata della stessa web app | Nessuna app in più da mantenere |
-| Hosting | Una piattaforma gestita (server + PostgreSQL gestito) | Niente server da amministrare a mano |
+
+| Componente                | Scelta                                                                                   | Motivo                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Linguaggio                | **TypeScript** ovunque                                                                   | Motore condiviso tra server, simulatore e client                 |
+| Organizzazione del codice | Monorepo con npm workspaces                                                              | Pacchetti separati, un solo repository                           |
+| Motore                    | Libreria TypeScript pura, **deterministica**, senza I/O                                  | Testabile, riproducibile, eseguibile nel simulatore e nel server |
+| Server                    | Node.js + Fastify, un unico servizio (monolite)                                          | Facile da gestire da soli                                        |
+| Database                  | PostgreSQL                                                                               | Stato, registro dei comandi, classifiche                         |
+| Scheduler e code          | **pg-boss** (code su PostgreSQL)                                                         | Tick a orari fissi senza aggiungere Redis                        |
+| Tempo reale               | WebSocket dal server                                                                     | Aggiornamenti di borsa, notifiche, messaggi                      |
+| Client                    | **React + Vite, web app responsive** con rilevamento del dispositivo, installabile (PWA) | Una sola interfaccia per mobile e computer, senza app native     |
+| Lingue                    | i18next, italiano e inglese dal primo giorno                                             | Aggiungere le traduzioni dopo costa molto di più                 |
+| Amministrazione           | Sezione riservata della stessa web app                                                   | Nessuna app in più da mantenere                                  |
+| Hosting                   | Una piattaforma gestita (server + PostgreSQL gestito)                                    | Niente server da amministrare a mano                             |
 
 ### 2.2 Struttura del repository
+
 ```
 /packages
   /engine        # motore di simulazione puro
@@ -56,6 +58,7 @@
 ```
 
 ### 2.3 Principi del motore
+
 - **Deterministico**: `nuovoStato = tick(stato, comandi, seed)`. Generatore casuale con seed per città e per tick.
 - **Comandi, non modifiche dirette**:
   - i giocatori inviano comandi validati (es. `ImpostaPrezzo`, `InviaOrdineBorsa`, `LanciaOPA`);
@@ -66,6 +69,7 @@
 - **Borsa separata dal tick**: gira in continuo; il tick ne legge i prezzi e aggiorna i fondamentali ogni trimestre.
 
 ### 2.4 Modello dati (entità principali)
+
 - **Città**: data di gioco, indicatori macro, seed, parametri.
 - **Giocatore**: classi attive, classe d'origine, competenze, tratti, reputazione, network, rating, benessere, ore, livello di vita, curriculum, lingua.
 - **Azienda**: forma giuridica, settore, sedi, soci e quote, fascia di apertura del capitale (§14.2.1), personale, budget per area, stock (brand, qualità, ricerca e sviluppo), clienti, bilancio, brevetti.
@@ -81,7 +85,9 @@
 - **Evento del Giornale.**
 
 ### 2.5 Pipeline del tick
+
 **Tick settimanale (4 al giorno, 00/06/12/18 UTC)**
+
 1. Applicare i comandi in coda (prezzi, budget, assunzioni, contratti firmati).
 2. Aggiornare macroeconomia ed eventi attivi.
 3. Mercato del lavoro: preavvisi scaduti, dimissioni (churn sul morale), assunzioni effettive.
@@ -93,6 +99,7 @@
 9. Contratti in scadenza, appalti, controlli di insolvenza.
 
 **Chiusura mensile (in aggiunta al tick delle 00:00)**
+
 1. Stipendi, affitti, rate, interessi, paniere personale, sussidi.
 2. Tasse; dividendi; commissioni dei fondi (high-water mark).
 3. Esperienza e livelli, tratti, reputazione, rating, benessere.
@@ -110,7 +117,8 @@
 
 Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 
-### Fase 0 — Fondamenta (1–2 settimane)
+### Fase 0 — Fondamenta (1–2 settimane) — ✅ completata
+
 - **Cose da consegnare**:
   - monorepo, lint, formattazione, CI (test a ogni push);
   - pacchetto `config` con schema di validazione e parametri dell'Appendice A;
@@ -120,6 +128,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 - **Completamento**: CI verde; tick deterministico (stesso seed → stesso risultato); invariante verificata; controlli di sicurezza attivi.
 
 ### Fase 1 — Motore economico base, offline (2–3 mesi)
+
 - **Cose da consegnare**:
   - modello di mercato completo (§8);
   - filiera dei 9 settori con matrice degli input e operatore cittadino (§6);
@@ -135,12 +144,14 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - test di causalità superato: un'azienda con fattori migliori cresce più delle altre.
 
 ### Fase 2 — Classi, progressione e personaggio (1–1,5 mesi)
+
 - **Cose da consegnare**: competenze, carriere, tratti, salto di classe con vincolo di ore, benessere, reputazione, network, condizioni di partenza, talento d'origine, fallimento, focus mensile del dipendente (§3–§5, §9.5).
 - **Completamento**:
   - nelle simulazioni ogni classe d'origine finisce in top 10 tra il 20% e il 30% delle volte;
   - tempi di progressione entro gli obiettivi (§5.5).
 
 ### Fase 3 — Vertical slice giocabile (2 mesi) ⟶ **punto di decisione**
+
 - **Ambito ridotto**:
   - 1 città;
   - 4 settori (Materie prime, Manifattura, Commercio, Ristorazione) + operatore cittadino per gli altri;
@@ -157,6 +168,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 - **Decisione**: continuare, correggere il ciclo quotidiano, oppure rivedere il design.
 
 ### Fase 4 — Mercati tra giocatori completi (2 mesi)
+
 - **Cose da consegnare**:
   - contratti completi con esecuzione automatica e messaggi delle trattative (§16, §19.7);
   - mercato del lavoro con dirigenti, pacchetti retributivi, consiglieri (§10);
@@ -167,10 +179,12 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 - **Completamento**: nelle simulazioni con bot "sociali", almeno il 50% della spesa dei giocatori va ad aziende di giocatori entro il mese 24.
 
 ### Fase 5 — Consorzi (1 mese)
+
 - **Cose da consegnare**: creazione, ruoli, cassa, prestiti interni, sconti, sinergia di filiera, vantaggi, joint venture, uscita ed espulsione, chat del consorzio (§15). Il patto di difesa arriva in Fase 8 con le OPA.
 - **Completamento**: nelle simulazioni i consorzi misti superano quelli monoclasse senza dominare.
 
 ### Fase 6 — Informazione, Giornale, esperienza (1,5 mesi)
+
 - **Cose da consegnare**:
   - livelli di visibilità (§17), report a pagamento, Giornale, curriculum pubblici;
   - notifiche (§19.6);
@@ -180,6 +194,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 - **Completamento**: un nuovo tester completa le missioni della prima settimana senza aiuto.
 
 ### Fase 7 — Stagioni, classifiche, integrità (1–1,5 mesi) ⟶ **ALPHA 1**
+
 - **Cose da consegnare**:
   - Valore Economico (§18.1), classifiche e albi;
   - ciclo di stagione: fine, chiusura d'ufficio, albo d'oro, pausa, reset, scioglimento dei consorzi;
@@ -191,6 +206,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 **Tempo indicativo fino all'Alpha 1: circa 12–15 mesi a tempo pieno.**
 
 ### Fase 8 — Finanza e conflitti (3–4 mesi) ⟶ **ALPHA 2**
+
 - **Cose da consegnare**:
   - **borsa**: registro degli ordini, market maker e trader gestiti dal computer, sospensioni, vendite allo scoperto (§12.3);
   - quotazione in borsa e **fasce di apertura del capitale con i loro bonus** (§14.2.1);
@@ -206,6 +222,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 - **Alpha 2**: nuova stagione completa con tutte le funzioni.
 
 ### Fase 9 — Beta e lancio
+
 - Più istanze di città.
 - Test di carico: 500 giocatori per città, picchi ai tick.
 - Scansione dinamica e **penetration test** esterno prima del lancio (§5.3).
@@ -217,6 +234,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 ---
 
 ## 4. Consigli pratici per lo sviluppo da soli
+
 - **Il motore va scritto e testato prima di tutto.** Con test solidi, l'AI può generare grandi parti di codice senza rompere l'economia.
 - **Una fase alla volta.** Non iniziare la successiva finché i criteri di completamento non sono soddisfatti.
 - **Configurazione al posto del codice**: ogni dubbio di bilanciamento si risolve cambiando un numero, non una funzione.
@@ -228,28 +246,31 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 ## 5. Sicurezza informatica
 
 In questo gioco la sicurezza ha due facce:
+
 - **sicurezza classica** (account, dati, server);
 - **integrità del gioco**: nessuno deve poter creare Crediti dal nulla, vedere dati riservati dei concorrenti o automatizzare il gioco in modo scorretto. L'informazione è una risorsa (GDD §17), quindi una fuga di dati è un exploit economico.
 
 ### 5.1 Modello delle minacce
-| Minaccia | Esempio | Contromisure principali |
-|---|---|---|
-| Furto di account | Password riusate, phishing | Hash Argon2id, limiti ai tentativi, verifica email, 2FA opzionale (obbligatoria per gli admin), avvisi di nuovo accesso |
-| Accesso a dati altrui (IDOR) | Chiamare l'API con l'id dell'azienda di un concorrente | Autorizzazione su ogni comando e ogni lettura; **filtro di visibilità** lato server secondo GDD §17; test automatici anti-fuga |
-| Creazione di denaro / doppia spesa | Inviare due volte lo stesso ordine in parallelo | Contabilità a partita doppia con invariante; transazioni del database con lock; chiavi di idempotenza sui comandi; elaborazione seriale per città |
-| Manipolazione dei valori | Quantità negative, numeri enormi, decimali strani | Schemi di validazione condivisi su ogni comando; **Crediti come interi** (centesimi), mai numeri in virgola mobile nel registro |
-| Logica di gioco lato client | Client modificato che "decide" un esito | Server autoritativo: il client invia solo intenzioni, ogni esito è calcolato sul server |
-| Bot e script | Script che piazza ordini o vince gare d'appalto 24/7 | Limiti di frequenza per comando, vietato nei termini di servizio, analisi dei comportamenti anomali, verifica umana sui casi sospetti |
-| Account multipli | Account secondari che regalano soldi | Fascia di prezzo, limiti agli account nuovi, grafo delle transazioni (GDD §20) |
-| Attacchi web (OWASP Top 10) | XSS nella chat, CSRF, SQL injection | React con escape automatico, Content Security Policy rigorosa, cookie HttpOnly/Secure/SameSite + token CSRF, query parametrizzate, header di sicurezza, CORS ristretto |
-| WebSocket | Connessioni non autenticate, messaggi enormi | Autenticazione all'apertura, controllo dell'origine, limiti di dimensione e frequenza |
-| Negazione del servizio | Flood di richieste ai tick | CDN/WAF davanti al server, limiti per IP e per account, paginazione, limiti di dimensione delle richieste |
-| Segreti esposti | Chiavi nel repository | Segreti solo nel gestore della piattaforma di hosting, scansione dei segreti nel CI, rotazione |
-| Catena di fornitura | Pacchetto npm compromesso | Lockfile, `npm ci`, aggiornamenti automatici controllati, audit delle dipendenze, poche dipendenze |
-| Abuso degli admin | Admin che si regala Crediti | Ruoli minimi, 2FA obbligatoria, ogni azione admin registrata in modo non modificabile e visibile nei report |
-| Perdita di dati | Guasto o errore umano | Backup automatici cifrati, test di ripristino periodici, registro dei comandi per ricostruire lo stato |
+
+| Minaccia                           | Esempio                                                | Contromisure principali                                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Furto di account                   | Password riusate, phishing                             | Hash Argon2id, limiti ai tentativi, verifica email, 2FA opzionale (obbligatoria per gli admin), avvisi di nuovo accesso                                                |
+| Accesso a dati altrui (IDOR)       | Chiamare l'API con l'id dell'azienda di un concorrente | Autorizzazione su ogni comando e ogni lettura; **filtro di visibilità** lato server secondo GDD §17; test automatici anti-fuga                                         |
+| Creazione di denaro / doppia spesa | Inviare due volte lo stesso ordine in parallelo        | Contabilità a partita doppia con invariante; transazioni del database con lock; chiavi di idempotenza sui comandi; elaborazione seriale per città                      |
+| Manipolazione dei valori           | Quantità negative, numeri enormi, decimali strani      | Schemi di validazione condivisi su ogni comando; **Crediti come interi** (centesimi), mai numeri in virgola mobile nel registro                                        |
+| Logica di gioco lato client        | Client modificato che "decide" un esito                | Server autoritativo: il client invia solo intenzioni, ogni esito è calcolato sul server                                                                                |
+| Bot e script                       | Script che piazza ordini o vince gare d'appalto 24/7   | Limiti di frequenza per comando, vietato nei termini di servizio, analisi dei comportamenti anomali, verifica umana sui casi sospetti                                  |
+| Account multipli                   | Account secondari che regalano soldi                   | Fascia di prezzo, limiti agli account nuovi, grafo delle transazioni (GDD §20)                                                                                         |
+| Attacchi web (OWASP Top 10)        | XSS nella chat, CSRF, SQL injection                    | React con escape automatico, Content Security Policy rigorosa, cookie HttpOnly/Secure/SameSite + token CSRF, query parametrizzate, header di sicurezza, CORS ristretto |
+| WebSocket                          | Connessioni non autenticate, messaggi enormi           | Autenticazione all'apertura, controllo dell'origine, limiti di dimensione e frequenza                                                                                  |
+| Negazione del servizio             | Flood di richieste ai tick                             | CDN/WAF davanti al server, limiti per IP e per account, paginazione, limiti di dimensione delle richieste                                                              |
+| Segreti esposti                    | Chiavi nel repository                                  | Segreti solo nel gestore della piattaforma di hosting, scansione dei segreti nel CI, rotazione                                                                         |
+| Catena di fornitura                | Pacchetto npm compromesso                              | Lockfile, `npm ci`, aggiornamenti automatici controllati, audit delle dipendenze, poche dipendenze                                                                     |
+| Abuso degli admin                  | Admin che si regala Crediti                            | Ruoli minimi, 2FA obbligatoria, ogni azione admin registrata in modo non modificabile e visibile nei report                                                            |
+| Perdita di dati                    | Guasto o errore umano                                  | Backup automatici cifrati, test di ripristino periodici, registro dei comandi per ricostruire lo stato                                                                 |
 
 ### 5.2 Principi tecnici
+
 - **Server autoritativo e deterministico**: il motore gira solo sul server; il registro dei comandi permette di ricostruire e verificare ogni partita.
 - **Denaro come interi**: 1 Cr = 100 unità intere; ogni importo è verificato come intero sicuro; gli arrotondamenti seguono una regola unica e documentata.
 - **Determinismo**: vietati `Math.random` e l'ora di sistema nel motore (controllo automatico nel lint); versione di Node fissata, perché le funzioni matematiche possono differire tra versioni.
@@ -260,18 +281,20 @@ In questo gioco la sicurezza ha due facce:
 - **Pagamenti** (quando ci sarà la monetizzazione): solo tramite un provider certificato, nessun dato di carta sui nostri server, verifica degli acquisti lato server.
 
 ### 5.3 Sicurezza per fase
-| Fase | Cosa si aggiunge |
-|---|---|
-| 0 | CI con scansione dei segreti, audit delle dipendenze, analisi statica del codice (CodeQL), aggiornamenti automatici delle dipendenze; Crediti interi; registro a partita doppia; lint che vieta fonti di non-determinismo; `SECURITY.md` per le segnalazioni |
-| 1–2 | Test property-based sull'invariante monetaria per ogni nuova meccanica; test di exploit economici con bot "avversari" |
-| 3 | Autenticazione (Argon2id, sessioni sicure, limiti ai tentativi), autorizzazione su ogni comando, filtro di visibilità, header di sicurezza e CSP, limiti di frequenza, idempotenza dei comandi |
-| 4–5 | Test di concorrenza su contratti, mercato e cassa del consorzio (doppia spesa, condizioni di gara); moderazione dei messaggi |
-| 6 | Test automatici anti-fuga di informazioni per ogni livello di visibilità (§17) |
-| 7 | Admin con 2FA e registro delle azioni; rilevamento di bot e account multipli; backup e test di ripristino; informativa privacy, esportazione e cancellazione dei dati |
-| 8 | Test di manipolazione della borsa e di concorrenza sul registro degli ordini; verifiche di copertura delle OPA |
-| 9 | Scansione dinamica (OWASP ZAP), test di carico e di resistenza al flood, **penetration test** esterno prima del lancio, piano di risposta agli incidenti |
+
+| Fase | Cosa si aggiunge                                                                                                                                                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0    | CI con scansione dei segreti, audit delle dipendenze, analisi statica del codice (CodeQL), aggiornamenti automatici delle dipendenze; Crediti interi; registro a partita doppia; lint che vieta fonti di non-determinismo; `SECURITY.md` per le segnalazioni |
+| 1–2  | Test property-based sull'invariante monetaria per ogni nuova meccanica; test di exploit economici con bot "avversari"                                                                                                                                        |
+| 3    | Autenticazione (Argon2id, sessioni sicure, limiti ai tentativi), autorizzazione su ogni comando, filtro di visibilità, header di sicurezza e CSP, limiti di frequenza, idempotenza dei comandi                                                               |
+| 4–5  | Test di concorrenza su contratti, mercato e cassa del consorzio (doppia spesa, condizioni di gara); moderazione dei messaggi                                                                                                                                 |
+| 6    | Test automatici anti-fuga di informazioni per ogni livello di visibilità (§17)                                                                                                                                                                               |
+| 7    | Admin con 2FA e registro delle azioni; rilevamento di bot e account multipli; backup e test di ripristino; informativa privacy, esportazione e cancellazione dei dati                                                                                        |
+| 8    | Test di manipolazione della borsa e di concorrenza sul registro degli ordini; verifiche di copertura delle OPA                                                                                                                                               |
+| 9    | Scansione dinamica (OWASP ZAP), test di carico e di resistenza al flood, **penetration test** esterno prima del lancio, piano di risposta agli incidenti                                                                                                     |
 
 ### 5.4 Risposta agli incidenti
+
 - **Interruttori per funzione**: ogni sistema (borsa, OPA, marketplace) si può sospendere senza fermare il gioco.
 - **Congelamento** di account e transazioni sospette.
 - **Ripristino**: tornare a uno snapshot e rielaborare i comandi validi, escludendo quelli dell'exploit.
@@ -281,21 +304,24 @@ In questo gioco la sicurezza ha due facce:
 ---
 
 ## 6. Strategia di test
-| Livello | Cosa verifica |
-|---|---|
-| Unitari | Ogni formula del GDD (attrattività, churn, tasse, rating, cause, high-water mark, fasce di apertura) |
-| Property-based | Conservazione del denaro, quote ≤ 100%, ore mai negative, contratti eseguiti esattamente una volta |
-| Scenario | "OPA con controfferta", "causa temeraria", "corsa agli sportelli", "fallimento di una ditta individuale" |
-| Regressione | Seed fissi con risultati salvati: ogni cambio dei numeri deve essere intenzionale |
-| Bilanciamento | Monte Carlo notturno nel CI, con avviso se un obiettivo di salute esce dalla fascia |
-| Carico | Tick di una città da 500 giocatori in meno di 30 secondi |
-| Sicurezza | Analisi statica, audit delle dipendenze, scansione dei segreti, test anti-fuga e di concorrenza, scansione dinamica, penetration test (§5.3) |
-| Gioco reale | Vertical slice, Alpha 1, Alpha 2: questionari e telemetria |
+
+| Livello        | Cosa verifica                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unitari        | Ogni formula del GDD (attrattività, churn, tasse, rating, cause, high-water mark, fasce di apertura)                                         |
+| Property-based | Conservazione del denaro, quote ≤ 100%, ore mai negative, contratti eseguiti esattamente una volta                                           |
+| Scenario       | "OPA con controfferta", "causa temeraria", "corsa agli sportelli", "fallimento di una ditta individuale"                                     |
+| Regressione    | Seed fissi con risultati salvati: ogni cambio dei numeri deve essere intenzionale                                                            |
+| Bilanciamento  | Monte Carlo notturno nel CI, con avviso se un obiettivo di salute esce dalla fascia                                                          |
+| Carico         | Tick di una città da 500 giocatori in meno di 30 secondi                                                                                     |
+| Sicurezza      | Analisi statica, audit delle dipendenze, scansione dei segreti, test anti-fuga e di concorrenza, scansione dinamica, penetration test (§5.3) |
+| Gioco reale    | Vertical slice, Alpha 1, Alpha 2: questionari e telemetria                                                                                   |
 
 ---
 
 ## 7. Telemetria per il bilanciamento
+
 Si raccolgono fin dalla vertical slice:
+
 - distribuzione del VE per classe;
 - tempi di progressione;
 - fallimenti;
@@ -311,20 +337,22 @@ Si raccolgono fin dalla vertical slice:
 ---
 
 ## 8. Rischi principali e mitigazioni
-| Rischio | Mitigazione |
-|---|---|
-| Tempi lunghi per una persona sola | Due alpha, ambito tagliabile, AI per il codice ripetitivo, test che proteggono il motore |
-| Economia instabile | Fase 1 offline con invarianti e stabilizzatore; parametri modificabili senza rilasci |
-| Troppa complessità per i nuovi | Leve sbloccate gradualmente, tutorial a missioni, pilota automatico |
-| Una classe dominante | Obiettivo 20–30% in top 10 per classe, verificato in CI e in alpha |
-| Effetto valanga dei primi | Rendimenti decrescenti, overhead, antitrust, stagioni con reset |
-| Città poco popolate | Operatore cittadino e popolazione gestita dal computer |
-| Abusi e account multipli | Fascia di prezzo, grafo delle transazioni, registro dei comandi |
-| Moderazione | Solo chat del consorzio e messaggi delle trattative al lancio |
-| Manutenzione dell'infrastruttura | Un solo servizio, PostgreSQL gestito, niente Redis |
+
+| Rischio                              | Mitigazione                                                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Tempi lunghi per una persona sola    | Due alpha, ambito tagliabile, AI per il codice ripetitivo, test che proteggono il motore           |
+| Economia instabile                   | Fase 1 offline con invarianti e stabilizzatore; parametri modificabili senza rilasci               |
+| Troppa complessità per i nuovi       | Leve sbloccate gradualmente, tutorial a missioni, pilota automatico                                |
+| Una classe dominante                 | Obiettivo 20–30% in top 10 per classe, verificato in CI e in alpha                                 |
+| Effetto valanga dei primi            | Rendimenti decrescenti, overhead, antitrust, stagioni con reset                                    |
+| Città poco popolate                  | Operatore cittadino e popolazione gestita dal computer                                             |
+| Abusi e account multipli             | Fascia di prezzo, grafo delle transazioni, registro dei comandi                                    |
+| Moderazione                          | Solo chat del consorzio e messaggi delle trattative al lancio                                      |
+| Manutenzione dell'infrastruttura     | Un solo servizio, PostgreSQL gestito, niente Redis                                                 |
 | Exploit economici e furti di account | Sicurezza integrata in ogni fase (§5), registro dei comandi, interruttori per funzione, ripristino |
 
 ---
 
 ## 9. Prossimo passo
-Avviare la **Fase 0**.
+
+Avviare la **Fase 1** (motore economico base, offline).

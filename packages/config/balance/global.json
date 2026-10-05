@@ -1,0 +1,43 @@
+{
+  "time": {
+    "ticksPerMonth": 4,
+    "monthsPerSeason": 60,
+    "hoursPerMonth": 200,
+    "maxHoursPerMonth": 260
+  },
+  "npc": {
+    "cityOperatorMarkup": 0.3,
+    "workerProductivity": 0.7,
+    "professionalCostMultiplier": 1.5,
+    "professionalEffectiveness": 0.7
+  },
+  "market": {
+    "antitrustThreshold": 0.4,
+    "churnSatisfactionSensitivity": 2.0,
+    "competitorPressure": 0.5,
+    "brandMonthlyDecay": 0.05,
+    "overheadExponent": 1.3,
+    "professionalServiceEffectCap": 0.25
+  },
+  "fees": {
+    "marketplace": 0.03,
+    "stockExchange": 0.002
+  },
+  "stockExchange": {
+    "circuitBreakerMove": 0.2
+  },
+  "ranking": {
+    "passiveCashflowMultiplier": 24,
+    "reputationFactorMin": 0.9,
+    "reputationFactorMax": 1.1
+  },
+  "finance": {
+    "bankMaxLeverage": 10,
+    "personalFundCapMultiple": 10
+  },
+  "consortium": {
+    "maxMembers": 20,
+    "exitPenalty": 0.2,
+    "maxInternalDiscount": 0.2
+  }
+}

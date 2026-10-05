@@ -1,0 +1,85 @@
+{
+  "energy": {
+    "entryLegalForm": "spa",
+    "priceElasticity": 0.6,
+    "baseMonthlyChurn": 0.01,
+    "attractivenessExponents": { "quality": 0.3, "brand": 0.2, "location": 0 },
+    "valuationMultiple": 8,
+    "inputShares": {
+      "raw_materials": 0.3,
+      "manufacturing": 0.1,
+      "logistics": 0.05,
+      "technology": 0.05
+    }
+  },
+  "raw_materials": {
+    "entryLegalForm": "srl",
+    "priceElasticity": 2.0,
+    "baseMonthlyChurn": 0.04,
+    "attractivenessExponents": { "quality": 0.3, "brand": 0.1, "location": 0 },
+    "valuationMultiple": 6,
+    "inputShares": { "energy": 0.2, "manufacturing": 0.05, "logistics": 0.15, "technology": 0.05 }
+  },
+  "manufacturing": {
+    "entryLegalForm": "srl",
+    "priceElasticity": 1.2,
+    "baseMonthlyChurn": 0.03,
+    "attractivenessExponents": { "quality": 0.8, "brand": 0.4, "location": 0 },
+    "valuationMultiple": 8,
+    "inputShares": { "energy": 0.15, "raw_materials": 0.4, "logistics": 0.1, "technology": 0.05 }
+  },
+  "construction": {
+    "entryLegalForm": "srl",
+    "priceElasticity": 1.0,
+    "baseMonthlyChurn": null,
+    "attractivenessExponents": { "quality": 0.7, "brand": 0.4, "location": 0 },
+    "valuationMultiple": 7,
+    "inputShares": {
+      "energy": 0.05,
+      "raw_materials": 0.25,
+      "manufacturing": 0.25,
+      "logistics": 0.1,
+      "technology": 0.05
+    }
+  },
+  "logistics": {
+    "entryLegalForm": "sole_proprietorship",
+    "priceElasticity": 1.5,
+    "baseMonthlyChurn": 0.03,
+    "attractivenessExponents": { "quality": 0.6, "brand": 0.2, "location": 0 },
+    "valuationMultiple": 7,
+    "inputShares": { "energy": 0.25, "manufacturing": 0.05, "technology": 0.1 }
+  },
+  "technology": {
+    "entryLegalForm": "sole_proprietorship",
+    "priceElasticity": 0.8,
+    "baseMonthlyChurn": 0.06,
+    "attractivenessExponents": { "quality": 1.0, "brand": 0.6, "location": 0 },
+    "valuationMultiple": 15,
+    "inputShares": { "energy": 0.1, "manufacturing": 0.05 }
+  },
+  "retail": {
+    "entryLegalForm": "sole_proprietorship",
+    "priceElasticity": 1.6,
+    "baseMonthlyChurn": 0.05,
+    "attractivenessExponents": { "quality": 0.5, "brand": 0.6, "location": 0.8 },
+    "valuationMultiple": 8,
+    "inputShares": { "energy": 0.05, "manufacturing": 0.5, "logistics": 0.15, "technology": 0.05 }
+  },
+  "food_service": {
+    "entryLegalForm": "sole_proprietorship",
+    "priceElasticity": 1.0,
+    "baseMonthlyChurn": 0.07,
+    "attractivenessExponents": { "quality": 0.9, "brand": 0.4, "location": 0.9 },
+    "valuationMultiple": 7,
+    "inputShares": { "energy": 0.1, "raw_materials": 0.35, "logistics": 0.05, "technology": 0.05 }
+  },
+  "finance": {
+    "entryLegalForm": "spa_with_license",
+    "priceElasticity": 0.7,
+    "baseMonthlyChurn": 0.02,
+    "attractivenessExponents": { "quality": 0.4, "brand": 0.5, "location": 0.2 },
+    "valuationMultiple": 10,
+    "inputShares": { "energy": 0.03, "technology": 0.15 }
+  }
+}
