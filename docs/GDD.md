@@ -1,11 +1,11 @@
 # Business Game — Game Design Document
 
-> Titolo provvisorio. Versione 0.1 — documento vivo.
+> Titolo provvisorio. Versione 0.2 — documento vivo.
 > Riferimento unico per design e sviluppo. Il piano di implementazione è in [`PIANO_IMPLEMENTAZIONE.md`](./PIANO_IMPLEMENTAZIONE.md).
 
 **Convenzioni**
 - Tutti i numeri sono **segnaposto di bilanciamento**: andranno validati con le simulazioni (vedi piano, Fase 1). Nel codice vivranno in file di configurazione, mai cablati.
-- **[P]** = proposta aggiunta durante la revisione dei buchi di analisi, *non ancora discussa*: da confermare.
+- Le proposte aggiunte nella revisione dei buchi di analisi (v0.1, segnate [P]) sono state **approvate** in v0.2 e fanno parte del design.
 - La moneta di gioco è il **Credito (Cr)**.
 
 ---
@@ -50,7 +50,7 @@ Gioco di strategia economica **multiplayer online, persistente**, in cui ogni gi
 5. **Strategico e competitivo, ma educativo** — meccaniche ispirate al mondo reale, ogni numero ha un "Perché?".
 6. **Equità** — nessun pay-to-win, stagioni con reset, patrimonio iniziale uguale per tutti.
 
-**Pubblico**: giocatori di strategia/gestionali, appassionati di business e finanza personale. Lingua e ambientazione internazionali (regole generiche, non legate a un paese).
+**Pubblico**: giocatori di strategia/gestionali, appassionati di business e finanza personale. Ambientazione internazionale (regole generiche, non legate a un paese); lingue al lancio italiano e inglese.
 
 ---
 
@@ -58,7 +58,8 @@ Gioco di strategia economica **multiplayer online, persistente**, in cui ogni gi
 
 | Elemento | Decisione |
 |---|---|
-| Piattaforme | Mobile e computer, stesso account. Mobile-first per il ciclo quotidiano, computer per la sessione strategica |
+| Piattaforme | **Web app responsive**: rileva se sei da mobile e adatta l'interfaccia. Stesso account. Mobile per il ciclo quotidiano, computer per la sessione strategica. Installabile sulla schermata home (PWA) |
+| Lingue al lancio | Italiano e inglese |
 | Mondo | Persistente e asincrono |
 | Città | **Una città** per istanza di gioco, circa 200–500 giocatori |
 | Tempo | **1 giorno reale = 1 mese di gioco** |
@@ -66,9 +67,9 @@ Gioco di strategia economica **multiplayer online, persistente**, in cui ogni gi
 | Stagione | **Esattamente 5 anni di gioco = 60 mesi = 60 giorni reali** |
 | Ingresso | Si può entrare in qualsiasi momento della stagione, sempre con lo stesso pacchetto iniziale |
 
-**[P] Orari fissi in UTC** (pubblico internazionale): tick alle 00:00, 06:00, 12:00, 18:00 UTC. La chiusura mensile coincide con il tick delle 00:00.
+**Orari fissi in UTC** (pubblico internazionale): tick alle 00:00, 06:00, 12:00, 18:00 UTC. La chiusura mensile coincide con il tick delle 00:00.
 
-**[P] Città piena**: raggiunta la capienza, si apre una nuova istanza (città separata, economia indipendente). Il giocatore sceglie la città a inizio stagione. Le classifiche sono per città, più una classifica globale solo onorifica.
+**Città piena**: raggiunta la capienza, si apre una nuova istanza (città separata, economia indipendente). Il giocatore sceglie la città a inizio stagione. Le classifiche sono per città, più una classifica globale solo onorifica.
 
 **Cosa succede a ogni tick settimanale**: produzione, approvvigionamento, vendite, flussi di clienti, dimissioni e assunzioni, contabilità settimanale.
 **Cosa succede alla chiusura mensile**: stipendi, affitti, paniere personale, interessi, tasse, dividendi, commissioni dei fondi, esperienza e tratti, reputazione, rating, Valore Economico e classifica, ricarica delle ore, benessere.
@@ -91,21 +92,21 @@ La pipeline esatta è nel piano di implementazione (§ Pipeline del tick).
 | Risorsa | Descrizione | Note |
 |---|---|---|
 | **Crediti (Cr)** | Liquidità, unico mezzo di scambio | Non sono l'unica risorsa: tutto ciò che si usa va comprato da qualcuno (§7) |
-| **Tempo** | **200 ore/mese** per tutti, fino a 260 pagando in benessere | Le ore non usate si perdono. **[P]** Le ore libere non assegnate diventano riposo (+benessere) |
+| **Tempo** | **200 ore/mese** per tutti, fino a 260 pagando in benessere | Le ore non usate si perdono. Le ore libere non assegnate diventano riposo (+benessere) |
 | **Competenze** | 6 competenze, livelli 1–10 | §5 |
 | **Reputazione** | 0–100, personale; le aziende hanno una propria reputazione | Fattore della classifica (±10%) |
-| **Network** | Numero e qualità dei contatti | **[P]** Cresce con contratti conclusi, consorzio, mentoring; sblocca la visibilità delle offerte riservate |
+| **Network** | Numero e qualità dei contatti | Cresce con contratti conclusi, consorzio, mentoring; sblocca la visibilità delle offerte riservate |
 | **Rating di credito** | AAA → D | Determina accesso e costo del debito (§12.1) |
 | **Benessere** | 0–100 | Influisce su produttività e ore efficaci |
 | **Beni** | Aziende, quote, immobili, posizioni, fondi, brevetti, proprietà intellettuale | Concorrono al patrimonio |
 
-### 3.1 Benessere [P]
+### 3.1 Benessere
 - Parte da 70.
 - Ogni ora oltre le 200 costa −0,3 di benessere.
 - La qualità del paniere personale (§7) dà da −10 a +10 al mese; il riposo da 0 a +10.
 - Sotto 40: produttività −10%. Sotto 20: **burnout**, produttività −30% e 60 ore di riposo forzato il mese successivo.
 
-### 3.2 Reputazione [P]
+### 3.2 Reputazione
 Sale con risultati misurati: aziende in utile, clienti soddisfatti, contratti rispettati, cause vinte, fondi positivi.
 Scende con insolvenze, cause perse, cause temerarie, fallimenti, licenziamenti di massa.
 Decade lentamente verso 50 se si resta inattivi.
@@ -138,7 +139,7 @@ Decade lentamente verso 50 se si resta inattivi.
 | **Imprenditore** | Fonda e gestisce aziende, prezzi e budget per area, assunzioni, quotazione in borsa, fusioni e acquisizioni, OPA | Dipendenti, professionisti, capitale, fornitori |
 | **Investitore** | Borsa (anche allo scoperto), quote di SRL, prestiti tra giocatori, immobili e posizioni, fondi per i risparmi altrui, OPA | Aziende, inquilini, professionisti |
 
-### 4.3 Focus mensile del dipendente [P]
+### 4.3 Focus mensile del dipendente
 Per dare decisioni attive anche al dipendente, ogni mese sceglie un **focus** che modifica il suo contributo e i tratti che può guadagnare:
 
 | Focus | Effetto |
@@ -163,7 +164,7 @@ Sono 6, con livelli da 1 a 10: **Tecnica, Commerciale, Legale, Contabilità e fi
 - **mentoring**: piccolo bonus.
 
 **Ritmo indicativo** per un giocatore attivo: livello 3 in circa 3 mesi, livello 6 in circa 12, livello 10 in circa 36.
-**[P] Curva**: esperienza cumulata per il livello n = 100 × n².
+**Curva**: esperienza cumulata per il livello n = 100 × n².
 
 ### 5.2 Carriere interne
 
@@ -204,7 +205,7 @@ Sono 6, con livelli da 1 a 10: **Tecnica, Commerciale, Legale, Contabilità e fi
 | VC / immobiliarista | Finanza 6 + patrimonio 250.000 | Affari grandi a debito, sedi su misura |
 | Raider | Finanza 8 + patrimonio 1.000.000 | Può guidare un'OPA |
 
-**[P]** Il livello "Gestore" è stato inserito per collocare l'apertura dei fondi nella scala dell'investitore.
+Il livello "Gestore" è stato inserito per collocare l'apertura dei fondi nella scala dell'investitore.
 
 ### 5.3 Tratti (tutte le classi)
 - Si guadagnano **solo con risultati misurati dal sistema**, mai con recensioni dei giocatori.
@@ -234,7 +235,7 @@ Sono 6, con livelli da 1 a 10: **Tecnica, Commerciale, Legale, Contabilità e fi
 | Investitore | Batte il mercato | Rendimento superiore all'indice della città | Come sopra |
 | Investitore | Anticrisi | Positivo anche in recessione | Come sopra + strumenti di analisi |
 
-**[P] Regole generali**:
+**Regole generali**:
 - ogni tratto ha 3 gradi (I–III), con effetto da +3% a +10% per grado;
 - un giocatore può avere al massimo 5 tratti attivi;
 - tratti e curriculum restano nell'albo d'oro tra le stagioni, ma **non danno effetti** nella stagione successiva.
@@ -250,7 +251,7 @@ Si sceglie una **classe d'origine**. Le altre classi si sbloccano con dei requis
 | Dipendente | Sempre, se qualcuno ti assume |
 | **Licenza finanziaria** | Imprenditore e Investitore attivi + Finanza 7 + SPA con capitale ≥ 500.000 |
 
-**[P] Disattivazione**: una classe si può disattivare liberamente. Riattivarla richiede di soddisfare ancora i requisiti, ma senza ripetere l'esame.
+**Disattivazione**: una classe si può disattivare liberamente. Riattivarla richiede di soddisfare ancora i requisiti, ma senza ripetere l'esame.
 
 ### 5.5 Ritmo di progressione desiderato
 - **Mesi 0–6**: imparare la propria classe.
@@ -277,7 +278,7 @@ Ogni settore produce **un bene astratto** con **qualità** e **prezzo**, in un *
 | Finanza | **Finanziario** | Tutti | SPA + licenza | Alto | Medio | Fiducia, tassi, rendimento |
 
 ### 6.1 Filiera e input
-Ogni unità prodotta richiede input da altri settori. **[P] Matrice degli input iniziale** (frazione del costo di produzione):
+Ogni unità prodotta richiede input da altri settori. **Matrice degli input iniziale** (frazione del costo di produzione):
 
 | Produttore ↓ / Input → | Energia | Materie prime | Manifattura | Logistica | Tecnologia |
 |---|---|---|---|---|---|
@@ -311,7 +312,7 @@ Garantiscono che il gioco funzioni anche con settori vuoti, e ogni buco è un'oc
 - prestigio della zona, che attira talenti (Tecnologia, Finanziario);
 - prezzo d'acquisto o affitto.
 
-Le posizioni eccellenti sono rare. **[P]** Ripetere la ricerca costa 5 ore + 200 Cr.
+Le posizioni eccellenti sono rare. Ripetere la ricerca costa 5 ore + 200 Cr.
 **Edilizia**: costruisce sedi su misura con caratteristiche scelte, oltre il massimo delle posizioni casuali, a costo e tempo maggiori.
 Gli investitori comprano posizioni e le affittano: si crea un mercato immobiliare vero.
 
@@ -338,7 +339,7 @@ Il costo della vita non si paga "alla città" ma è un **paniere di beni e servi
 
 **Livello di vita** (5 livelli: base, comodo, agiato, lusso, élite): determina dimensione e costo del paniere (base circa 1.200 Cr/mese), benessere e reputazione. Gonfiare lo stile di vita è una trappola del cashflow, ed è voluto.
 
-**[P] Mancato pagamento del paniere**: se la liquidità non basta, il paniere scende automaticamente al livello base. Se nemmeno quello è coperto, scatta il debito verso l'operatore cittadino (rating −1 gradino, benessere −15).
+**Mancato pagamento del paniere**: se la liquidità non basta, il paniere scende automaticamente al livello base. Se nemmeno quello è coperto, scatta il debito verso l'operatore cittadino (rating −1 gradino, benessere −15).
 
 ### 7.2 Consumi di professionisti e aziende
 - **Professionisti**: strumenti (Tecnologia), ufficio (immobili), energia, servizi.
@@ -357,7 +358,7 @@ Il costo della vita non si paga "alla città" ma è un **paniere di beni e servi
 ### 7.4 Domanda dei personaggi gestiti dal computer
 Ogni settore che vende alle persone ha un **minimo fisso di domanda** (popolazione cittadina gestita dal computer), quanto basta perché domanda e offerta si muovano anche con pochi giocatori. **I consumi dei giocatori si sommano sopra.**
 
-**[P]** La spesa della popolazione cresce con il monte stipendi pagato in città (moltiplicatore 0,8–1,2), così salari più alti significano più consumi: effetto keynesiano.
+La spesa della popolazione cresce con il monte stipendi pagato in città (moltiplicatore 0,8–1,2), così salari più alti significano più consumi: effetto keynesiano.
 
 ---
 
@@ -405,7 +406,7 @@ Stesso modello, con due differenze:
 
 ### 9.1 Fondazione
 Si scelgono settore e sede; si versa il capitale (o lo si raccoglie da investitori).
-**[P]** Tempo di avvio: 1 mese di gioco (ridotto dai tratti "Specialista di settore" e "Fondatore di successo").
+Tempo di avvio: 1 mese di gioco (ridotto dai tratti "Specialista di settore" e "Fondatore di successo").
 
 ### 9.2 Leve dell'imprenditore
 **Leve**: prezzo; budget per area; assunzioni e licenziamenti; fornitori e contratti; sedi; dividendi; raccolta di capitale.
@@ -420,11 +421,11 @@ Si scelgono settore e sede; si versa il capitale (o lo si raccoglie da investito
 | Servizio clienti | Servizio (S) |
 
 **Ore del fondatore**: gestire un'azienda piccola costa 40 ore al mese, che scendono a 10 con un CEO.
-**[P] Senza gestione** (meno ore del necessario e nessun CEO): l'azienda va in pilota automatico con −10% di efficienza.
+**Senza gestione** (meno ore del necessario e nessun CEO): l'azienda va in pilota automatico con −10% di efficienza.
 
 **Remunerazione del fondatore**: stipendio (reddito attivo, tassato come persona) oppure dividendi (passivi, tassati al 20%). È una scelta educativa.
 
-### 9.3 Brevetti [P]
+### 9.3 Brevetti
 - Quando lo stock di ricerca e sviluppo supera una soglia, si può registrare un brevetto (costo + professionista Legale).
 - Effetto: +qualità protetta per 24 mesi.
 - Un concorrente che raggiunge una qualità equivalente senza licenza rende fondata una causa per violazione.
@@ -435,7 +436,7 @@ Ditta individuale → SRL → SPA → Holding (§5.2).
 - **SRL**: quote cedibili con accordo dei soci.
 - **SPA**: azioni; può quotarsi (§12.3).
 
-### 9.5 Fallimento [P]
+### 9.5 Fallimento
 **Quando**: liquidità negativa per 2 tick consecutivi senza credito disponibile → procedura di insolvenza.
 
 **Ordine di pagamento dei creditori**:
@@ -472,7 +473,7 @@ morale = f(salario / media di mercato, carico di ore, leadership, benessere)
 
 **Lavoratori gestiti dal computer**: disponibili senza limite al salario di mercato, ma con produttività al 70% e nessun bonus.
 
-**[P] Disoccupazione**: chi perde il lavoro riceve un sussidio dalla città pari al 60% dell'ultimo stipendio per 6 mesi (massimo 3.000 Cr/mese).
+**Disoccupazione**: chi perde il lavoro riceve un sussidio dalla città pari al 60% dell'ultimo stipendio per 6 mesi (massimo 3.000 Cr/mese).
 
 ### 10.2 Bonus del dipendente giocatore
 | Livello | Effetto | Stipendio indicativo (Cr/mese) |
@@ -494,20 +495,20 @@ morale = f(salario / media di mercato, carico di ore, leadership, benessere)
 ### 10.4 Pacchetto retributivo
 - **Fisso.**
 - **Variabile** sui risultati, calcolato in automatico (percentuale dell'utile o premio sulla crescita).
-- **Stock option** con maturazione progressiva (**[P]** 25% ogni 12 mesi).
+- **Stock option** con maturazione progressiva (25% ogni 12 mesi).
 - **Paracadute**, pagato in caso di licenziamento **o di OPA riuscita**: chi acquisisce eredita i contratti.
 - **Patto di non concorrenza**: se violato, causa fondata.
-- **[P] Preavviso** di dimissioni o licenziamento: 1 mese di gioco (personalizzabile nel contratto).
+- **Preavviso** di dimissioni o licenziamento: 1 mese di gioco (personalizzabile nel contratto).
 
 ### 10.5 Rischio condiviso e incarichi multipli
 - La reputazione del dirigente sale e scende con i risultati dell'azienda.
-- **Consigliere d'amministrazione indipendente**: circa 10 ore al mese per incarico, compenso fisso, piccolo bonus di governance. **[P]** Massimo 3 incarichi.
+- **Consigliere d'amministrazione indipendente**: circa 10 ore al mese per incarico, compenso fisso, piccolo bonus di governance. Massimo 3 incarichi.
 
 ---
 
 ## 11. Servizi professionali
 
-### 11.1 Incarico [P]
+### 11.1 Incarico
 Un incarico è un contratto (§16) che specifica:
 - tipo di servizio;
 - ore richieste;
@@ -544,9 +545,9 @@ I professionisti (Finanza, Marketing) possono vendere **report sui concorrenti**
 ### 12.1 Banca gestita dal computer e rating
 **Tasso** = tasso di riferimento (§13) + spread del rating.
 
-**[P] Rating**: punteggio 0–1000 da stabilità del reddito, rapporto debito/reddito, storico dei pagamenti e patrimonio, convertito in classi AAA…D.
+**Rating**: punteggio 0–1000 da stabilità del reddito, rapporto debito/reddito, storico dei pagamenti e patrimonio, convertito in classi AAA…D.
 
-**[P] Spread indicativi**:
+**Spread indicativi**:
 
 | Rating | AAA | AA | A | BBB | BB | B | CCC | D |
 |---|---|---|---|---|---|---|---|---|
@@ -558,7 +559,7 @@ I professionisti (Finanza, Marketing) possono vendere **report sui concorrenti**
 Tasso, durata e garanzie si negoziano. Il sistema esegue le rate in automatico; l'insolvenza è causa fondata e abbassa il rating.
 
 ### 12.3 Borsa
-- **Quotazione (IPO) [P]**:
+- **Quotazione (IPO)**:
   - requisiti: SPA, almeno il 25% delle azioni sul mercato;
   - prezzo basato sulla valutazione, con sconto del 10–15%;
   - raccolta degli ordini per 1 giorno reale (giocatori + personaggi gestiti dal computer);
@@ -571,9 +572,9 @@ Tasso, durata e garanzie si negoziano. Il sistema esegue le rate in automatico; 
   - "rumore": movimento casuale.
 - **Market maker**: liquidità sempre garantita, con uno scarto tra acquisto e vendita.
 - **Prezzo** = fondamentali + umore dei flussi reali. I risultati trimestrali riallineano il prezzo.
-- **Vendite allo scoperto**: permesse. **[P]** Margine del 150%, costo del prestito titoli, chiusura forzata se il margine non basta.
+- **Vendite allo scoperto**: permesse. Margine del 150%, costo del prestito titoli, chiusura forzata se il margine non basta.
 - **Contro la manipolazione**: sospensione per 6 ore dopo un movimento di ±20% in 24 ore; medie a 30 giorni per la classifica; trader "value" che correggono le bolle.
-- **[P] Commissioni**: 0,2% per operazione.
+- **Commissioni**: 0,2% per operazione.
 - **Dati pubblici**: volumi, indice della città, partecipazioni sopra il 5%, bilanci trimestrali.
 
 ### 12.4 Fondi degli investitori
@@ -601,7 +602,7 @@ Tasso, durata e garanzie si negoziano. Il sistema esegue le rate in automatico; 
    - **Leva massima**: prestiti ≤ 10 volte il capitale.
    - **Insolvenze**: riducono il capitale.
    - **Corsa agli sportelli**: se la fiducia crolla, i depositanti ritirano i soldi tutti insieme.
-   - **Garanzia sui depositi** della città fino a un tetto (**[P]** 50.000 Cr per depositante).
+   - **Garanzia sui depositi** della città fino a un tetto (50.000 Cr per depositante).
 2. **Assicurazione**: copre rischi (eventi di settore, crisi energetica, **spese legali**) in cambio di un premio.
 3. **Gestione del risparmio**: fondi senza il tetto personale.
 4. **Banca d'affari**: quotazioni, OPA, cordate, con commissioni.
@@ -612,16 +613,16 @@ Tasso, durata e garanzie si negoziano. Il sistema esegue le rate in automatico; 
 
 **Indicatori**: PIL, disoccupazione, inflazione (indice dei prezzi del paniere), tasso di riferimento, indice di borsa.
 
-**[P] Banca centrale** gestita dal computer:
+**Banca centrale** gestita dal computer:
 ```
 tasso = 2% + 1,5·(inflazione − 2%) − 0,5·(disoccupazione − 5%)
 ```
 Limiti tra 0% e 10%; variazione massima ±0,25 punti al mese.
 
 **Cicli ed eventi**: espansione e recessione, eventi di settore (crisi energetica, raccolto scarso, bolla tecnologica, boom edilizio).
-**[P]** Circa 1 evento al mese, annunciato dal Giornale; effetti su domanda, costi o tassi per 3–12 mesi.
+Circa 1 evento al mese, annunciato dal Giornale; effetti su domanda, costi o tassi per 3–12 mesi.
 
-**[P] Tasse** (generiche, internazionali):
+**Tasse** (generiche, internazionali):
 
 | Imposta | Aliquota |
 |---|---|
@@ -634,10 +635,10 @@ Limiti tra 0% e 10%; variazione massima ±0,25 punti al mese.
 Nessuna IVA al lancio.
 
 **Appalti pubblici**: la città pubblica gare in orari casuali (Edilizia, Tecnologia, Logistica, Energia).
-- **[P]** Offerte in busta chiusa, finestra di 12 ore reali.
+- Offerte in busta chiusa, finestra di 12 ore reali.
 - Punteggio: prezzo, qualità e reputazione.
 
-### 13.1 Equilibrio monetario [P]
+### 13.1 Equilibrio monetario
 | Entrate di denaro nel sistema | Uscite di denaro dal sistema |
 |---|---|
 | Domanda della popolazione gestita dal computer | Tasse |
@@ -671,14 +672,14 @@ Nessun pulsante "attacca" e nessuna notifica "sei sotto attacco".
   1. fino al 5%: rastrellamento anonimo;
   2. oltre il 5%: obbligo di comunicazione pubblica (e a ogni ulteriore +5%);
   3. oltre il 30%: OPA obbligatoria, con premio rispetto al prezzo di mercato.
-- **[P] OPA volontaria**: si può lanciare in qualsiasi momento, anche senza aver superato il 30%.
-- **[P] Prezzo minimo dell'offerta**: il più alto tra la media dei 30 giorni e il prezzo massimo pagato dall'offerente negli ultimi 12 mesi.
-- **[P] Copertura obbligatoria**: al lancio dell'offerta, contanti bloccati o finanziamento impegnato da una banca.
+- **OPA volontaria**: si può lanciare in qualsiasi momento, anche senza aver superato il 30%.
+- **Prezzo minimo dell'offerta**: il più alto tra la media dei 30 giorni e il prezzo massimo pagato dall'offerente negli ultimi 12 mesi.
+- **Copertura obbligatoria**: al lancio dell'offerta, contanti bloccati o finanziamento impegnato da una banca.
 - **Pagamento**: contanti (OPA), azioni proprie (OPS) o misto (OPAS).
 - **Durata**: 3 giorni reali (minimo 24 ore per la difesa garantito).
-- **[P] Controfferte**: almeno +5% sull'offerta precedente; riaprono la finestra di 24 ore.
+- **Controfferte**: almeno +5% sull'offerta precedente; riaprono la finestra di 24 ore.
 - **Esito sopra il 50%**: controllo. **Il fondatore o chi aveva il controllo è obbligato a vendere tutto al prezzo dell'offerta.** Gli altri soci di minoranza scelgono se restare.
-- **[P] Sopra il 90%**: l'acquirente può togliere l'azienda dalla borsa e comprare il resto al prezzo dell'offerta.
+- **Sopra il 90%**: l'acquirente può togliere l'azienda dalla borsa e comprare il resto al prezzo dell'offerta.
 - **Esito sotto il 50%**: l'acquirente resta socio di minoranza e ha speso commissioni.
 - **Antitrust**: un'OPA che porta la quota di settore oltre il 40% è bloccata.
 - **Difese**:
@@ -692,7 +693,29 @@ Nessun pulsante "attacca" e nessuna notifica "sei sotto attacco".
 - **Fine stagione**: niente nuove OPA negli ultimi 3 giorni reali.
 - **Paracadute**: i dirigenti dell'azienda acquisita lo incassano secondo contratto.
 
-**Nota di design**: una scalata ostile riesce solo se chi controlla l'azienda ha meno del 50% delle azioni. Un fondatore che tiene la maggioranza è al sicuro, ma rinuncia a una parte del capitale che potrebbe raccogliere. È un compromesso voluto.
+### 14.2.1 Bonus della società aperta
+Una scalata ostile riesce solo se chi controlla l'azienda ha meno del 50%. Per rendere conveniente aprire il capitale, le società quotate ricevono **bonus tangibili in base alla quota del primo azionista**:
+
+| Fascia | Quota del primo azionista | Bonus | Rischio |
+|---|---|---|---|
+| **Controllata** | ≥ 50% | Nessuno | Non scalabile |
+| **Aperta** | 30–50% | Valore fondamentale +5%; rating aziendale +1 gradino; inclusione nell'indice della città (i fondi indice gestiti dal computer comprano il titolo); +5% di attrattività sul mercato del lavoro | Scalabile con OPA |
+| **Public company** | < 30% | Valore fondamentale +10%; rating aziendale +1 gradino; inclusione nell'indice; +10% di attrattività sul mercato del lavoro; reputazione aziendale +5; costi di quotazione e aumenti di capitale −50% | Scalabile; OPA obbligatoria facile da raggiungere |
+
+**Perché sono tangibili**:
+- il valore fondamentale più alto è quello su cui comprano i trader "value" gestiti dal computer (§12.3), quindi spinge in su il prezzo di borsa e il VE di tutti gli azionisti, fondatore compreso (§18.1);
+- il rating migliore abbassa il costo del debito;
+- l'inclusione nell'indice porta domanda stabile sul titolo;
+- l'attrattività aiuta a trattenere e assumere talenti.
+
+**Contro gli aggiramenti**: per calcolare la fascia si sommano le quote di chi agisce insieme al primo azionista:
+- partecipanti a un patto di sindacato;
+- membri dello stesso consorzio;
+- società controllate dal primo azionista.
+
+Un fondatore al 45% con un amico del consorzio al 10% conta quindi come **Controllata**.
+
+La fascia si ricalcola a ogni chiusura mensile.
 
 ### 14.3 Cause legali
 **Serve un fondamento verificabile dal sistema**:
@@ -704,7 +727,7 @@ Nessun pulsante "attacca" e nessuna notifica "sei sotto attacco".
 | Concorrenza sleale | Prezzi sotto costo da parte di chi ha più del 40% del mercato; assunzione di chi ha un patto di non concorrenza |
 | Ricorso contro un'OPA | Irregolarità nella procedura |
 
-**Procedura [P]**:
+**Procedura**:
 1. **Deposito**: 2% della richiesta, minimo 2.000 Cr, più le ore dell'avvocato.
 2. **Stima della fondatezza**: prima del deposito l'avvocato stima la fondatezza (F tra 0,1 e 0,9). La precisione della stima cresce con la competenza Legale.
 3. **Istruttoria**: 3–7 giorni reali, durante i quali entrambe le parti investono in avvocati e perizie.
@@ -717,7 +740,7 @@ Nessun pulsante "attacca" e nessuna notifica "sei sotto attacco".
 6. **Costi**: chi perde paga le spese. Una causa con F < 0,2 è "temeraria": costi doppi e −reputazione.
 7. **Accordo** possibile in qualsiasi momento: diventa una trattativa tra giocatori.
 
-**Scudo da principiante (7 giorni)**: non si può essere citati in giudizio, salvo per contratti firmati. Lo scudo termina prima se si lancia una causa o un'OPA, o se si supera una soglia di patrimonio (**[P]** 50.000 Cr).
+**Scudo da principiante (7 giorni)**: non si può essere citati in giudizio, salvo per contratti firmati. Lo scudo termina prima se si lancia una causa o un'OPA, o se si supera una soglia di patrimonio (50.000 Cr).
 
 ---
 
@@ -746,7 +769,7 @@ Nessun pulsante "attacca" e nessuna notifica "sei sotto attacco".
 - Osservatorio di mercato: report sui concorrenti in tempo reale;
 - Cordata rapida: costi di preparazione delle OPA ridotti.
 
-**[P]** Esperienza del consorzio da: scambi interni, joint venture, obiettivi raggiunti. 1 punto vantaggio per livello, livello massimo 10.
+Esperienza del consorzio da: scambi interni, joint venture, obiettivi raggiunti. 1 punto vantaggio per livello, livello massimo 10.
 
 **Joint venture**: aziende possedute da più membri (quote personali), con decisioni in proporzione alle quote.
 
@@ -771,7 +794,7 @@ Tutti gli accordi tra giocatori sono **contratti gestiti ed eseguiti dal sistema
 | Licenza di brevetto | Royalty, durata |
 
 **Esecuzione automatica**: pagamenti e consegne avvengono ai tick.
-**[P] Mancata esecuzione** (soldi o capacità insufficienti): penale prevista dal contratto, rating −1, causa per inadempimento automaticamente fondata (F = 0,8).
+**Mancata esecuzione** (soldi o capacità insufficienti): penale prevista dal contratto, rating −1, causa per inadempimento automaticamente fondata (F = 0,8).
 
 ---
 
@@ -828,7 +851,7 @@ Il VE si ricalcola a ogni chiusura mensile.
 
 ### 18.3 Stagione
 - **Durata**: 60 mesi di gioco (5 anni esatti).
-- **Fine stagione** [P]:
+- **Fine stagione**:
   - la classifica si congela alla chiusura del mese 60;
   - si fa un'ultima valutazione di tutti i beni;
   - contratti, fondi e posizioni vengono chiusi d'ufficio.
@@ -836,7 +859,7 @@ Il VE si ricalcola a ogni chiusura mensile.
 - **Cosa resta**: titoli, oggetti estetici, albo d'oro, curriculum storico. Nessun potere.
 - **Premi**: riconoscimenti per top 1, 10 e 100 (generale, per classe, per albo, per consorzio). Il valore dei premi si definisce con la monetizzazione.
 
-**[P] Tra una stagione e l'altra**: pausa di 2 giorni reali con riepilogo, statistiche, scelta della nuova classe e formazione anticipata dei consorzi (che diventano attivi al via).
+**Tra una stagione e l'altra**: pausa di 2 giorni reali con riepilogo, statistiche, scelta della nuova classe e formazione anticipata dei consorzi (che diventano attivi al via).
 
 ---
 
@@ -856,7 +879,7 @@ Il VE si ricalcola a ogni chiusura mensile.
 
 **Sessione strategica** (30–60 minuti, computer): analisi, OPA, cause, quotazioni, consorzio.
 
-### 19.3 Pilota automatico [P]
+### 19.3 Pilota automatico
 | Regola | Opzioni di default |
 |---|---|
 | Prezzo | Segue la media del settore ±X% |
@@ -872,14 +895,14 @@ Il pilota automatico non è mai brillante quanto un giocatore attivo.
 ### 19.4 Primi passi
 - **Ingresso nella città vera**, con scudo da principiante di 7 giorni (§14.3), prezzi agevolati dai fornitori gestiti dal computer e prestito iniziale a tasso basso.
 - **Scelta della classe** con anteprima "un mese nei panni di…".
-- **Tutorial a missioni di carriera** nella prima settimana. **[P]** 5–7 missioni per classe, ognuna con una piccola ricompensa in esperienza.
+- **Tutorial a missioni di carriera** nella prima settimana. 5–7 missioni per classe, ognuna con una piccola ricompensa in esperienza.
 - **Mentori**: i veterani guadagnano reputazione e bonus di esperienza.
 - **Lato educativo**: pulsante "Perché?" su ogni numero, glossario integrato, "lezione" di una riga a fine mese.
 
 ### 19.5 Schermate principali
 Panoramica e cashflow · Agenda delle ore · Azienda/Portafoglio · Mercato (beni, lavoro, servizi, immobili) · Borsa · Rete e consorzio · Giornale · Classifica · Profilo/curriculum.
 
-### 19.6 Notifiche [P]
+### 19.6 Notifiche
 Push solo per:
 - eventi ostili (OPA, causa);
 - offerte di lavoro o di acquisto rivolte a te;
@@ -889,14 +912,18 @@ Push solo per:
 
 Tutte configurabili.
 
-### 19.7 Comunicazione [P]
-Chat della città, chat del consorzio, messaggi privati, trattative dentro le offerte. Moderazione e segnalazioni (§20).
+### 19.7 Comunicazione
+Al lancio solo due canali:
+- **chat del consorzio**;
+- **messaggi dentro le trattative**: ogni offerta (lavoro, fornitura, quote, prestiti, OPA) ha il suo filo di messaggi tra le parti.
+
+Niente chat della città né messaggi privati liberi: meno moderazione, meno tossicità. Il Giornale fa da "piazza" pubblica. Segnalazioni e filtri come da §20.
 
 ---
 
 ## 20. Integrità, anti-abuso e moderazione
 
-**[P] Account multipli**:
+**Account multipli**:
 - verifica dell'account (email + dispositivo);
 - limiti ai trasferimenti verso account nuovi;
 - scambi tra giocatori ammessi solo dentro una fascia di prezzo di mercato (±30%; fuori fascia servono motivazione e revisione);
@@ -908,7 +935,7 @@ Chat della città, chat del consorzio, messaggi privati, trattative dentro le of
 
 **Vietati**: vendita di account e di Crediti per denaro reale.
 
-**Moderazione**: segnalazioni, filtri sulla chat, sanzioni progressive.
+**Moderazione**: segnalazioni, filtri su chat del consorzio e messaggi delle trattative, sanzioni progressive.
 
 ---
 
@@ -925,15 +952,16 @@ Chat della città, chat del consorzio, messaggi privati, trattative dentro le of
 
 ## 22. Domande aperte
 
-Decisioni che spettano a te e che servono per partire con l'implementazione:
+Nessuna domanda aperta bloccante.
 
-1. **Lingue al lancio**: proposta italiano + inglese.
-2. **Tecnologia dei client**: proposta un'unica base di codice (React Native + Expo) per web, iOS e Android; in alternativa prima una web app responsive (PWA) e app native dopo.
-3. **Team e tempi**: chi sviluppa (solo tu, un team, uno studio esterno) e con quale orizzonte. Serve a calibrare il piano.
-4. **Nome del gioco e della valuta**: "Business Game" e "Crediti" sono provvisori.
-5. **Fondatore con la maggioranza**: con le regole attuali, chi mantiene più del 50% delle azioni non è scalabile. Ti va bene così, o vuoi un limite (per esempio un flottante minimo più alto per le quotate)?
-6. **Chat aperta al lancio**: la includiamo da subito (richiede moderazione) o partiamo solo con chat del consorzio e trattative?
-7. **Revisione delle proposte [P]**: tutte le voci segnate [P] sono default ragionevoli ma non discussi. Vanno confermate o corrette.
+**Decisioni registrate in v0.2**:
+- lingue al lancio: italiano e inglese;
+- web app responsive con rilevamento del dispositivo (installabile come PWA), nessuna app nativa al lancio;
+- sviluppo da parte di una sola persona: piano ricalibrato (vedi piano di implementazione);
+- nomi provvisori "Business Game" e "Crediti" confermati per ora;
+- bonus per le società con primo azionista sotto il 50% (§14.2.1);
+- comunicazione limitata a chat del consorzio e messaggi delle trattative (§19.7);
+- tutte le proposte [P] della v0.1 approvate.
 
 ---
 
