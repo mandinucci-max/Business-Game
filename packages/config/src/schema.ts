@@ -149,6 +149,8 @@ const durationSchema = z
 
 const eventSchema = z.strictObject({
   id: z.string().min(1),
+  /** Eventi dello stesso gruppo non possono essere attivi insieme (es. recessione ed espansione). */
+  group: z.string().min(1).optional(),
   durationMonths: durationSchema,
   effects: z
     .array(
@@ -196,6 +198,9 @@ const economySchema = z.strictObject({
     trainingMaxBonus: z.number().min(0),
     trainingReferencePerWorkerWeekly: positive,
     lowMoraleWeeklyQuitRate: share,
+    /** Sussidio dopo la perdita del reddito, in quota del salario base del dipendente (GDD §10.1). */
+    unemploymentBenefitShare: share,
+    unemploymentBenefitMonths: z.int().min(0),
     maxWorkersByLegalForm: z.record(z.enum(LEGAL_FORMS), z.int().min(1)),
   }),
   demand: z.strictObject({
@@ -218,6 +223,10 @@ const economySchema = z.strictObject({
     stabilizerMax: positive,
     stabilizerTolerance: z.number().min(0),
     monthlyEventProbability: share,
+    /** Curva di Phillips: quanto salari e prezzi accelerano se la disoccupazione è sotto l'obiettivo. */
+    phillipsSlope: z.number().min(0),
+    maxAnnualCostInflation: z.number(),
+    minAnnualCostInflation: z.number(),
   }),
   events: z.array(eventSchema),
   bank: z.strictObject({

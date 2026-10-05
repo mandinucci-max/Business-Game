@@ -7,33 +7,11 @@ import {
   checkLedgerInvariants,
   postTransaction,
 } from './ledger';
+import { type Command, type CommandRejection, CommandRejectedError } from './command-core';
+import { DEFAULT_COMMAND_HANDLERS } from './commands';
+import { DEFAULT_PIPELINE } from './pipeline';
 import { type Rng, createRng } from './rng';
 import type { CityState } from './state';
-
-/** Intenzione di un giocatore, già validata e autorizzata dal server (piano §2.3). */
-export interface Command {
-  /** Id univoco: serve all'idempotenza (lo stesso comando non si applica due volte). */
-  readonly id: string;
-  readonly playerId: string;
-  readonly type: string;
-  readonly payload: unknown;
-}
-
-export type RejectionReason = 'duplicate_id' | 'unknown_type' | 'rejected';
-
-export interface CommandRejection {
-  readonly commandId: string;
-  readonly reason: RejectionReason;
-  readonly message: string;
-}
-
-/** Errore da lanciare in un handler per rifiutare un comando. */
-export class CommandRejectedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'CommandRejectedError';
-  }
-}
 
 export interface TickContext {
   /** Bozza dello stato del tick: si può modificare, viene confermata solo se le invarianti reggono. */
@@ -44,6 +22,14 @@ export interface TickContext {
   rng(stream: string): Rng;
   /** Registra una transazione nel registro e nel rapporto del tick. */
   post(input: TransactionInput): Transaction;
+  /** Registra un fatto rilevante del tick (fallimenti, eventi...) nel rapporto. */
+  emit(event: GameEvent): void;
+}
+
+/** Fatto rilevante del tick, destinato al Giornale e ai report. */
+export interface GameEvent {
+  readonly type: string;
+  readonly [key: string]: string | number | boolean;
 }
 
 /**
@@ -52,6 +38,12 @@ export interface TickContext {
  * il comando: la transazione è atomica, quindi va registrata come ultima modifica.
  */
 export type CommandHandler = (ctx: TickContext, command: Command) => void;
+export {
+  type Command,
+  type CommandRejection,
+  CommandRejectedError,
+  type RejectionReason,
+} from './command-core';
 export type CommandHandlers = Readonly<Record<string, CommandHandler>>;
 
 export interface TickStep {
@@ -65,32 +57,6 @@ export interface Pipeline {
   readonly monthly: readonly TickStep[];
 }
 
-/**
- * Ordine delle fasi del tick (piano §2.5). In Fase 0 sono vuote: ogni fase successiva
- * del piano ne implementa il contenuto senza cambiare l'ordine.
- */
-export const DEFAULT_PIPELINE: Pipeline = {
-  weekly: [
-    { name: 'macro_and_events' },
-    { name: 'labour_market' },
-    { name: 'production_capacity' },
-    { name: 'procurement' },
-    { name: 'production' },
-    { name: 'markets' },
-    { name: 'weekly_accounting' },
-    { name: 'contracts_and_insolvency' },
-  ],
-  monthly: [
-    { name: 'monthly_payments' },
-    { name: 'taxes_dividends_fees' },
-    { name: 'progression' },
-    { name: 'capital_bands' },
-    { name: 'central_bank' },
-    { name: 'valuation_and_rankings' },
-    { name: 'hours_reset_and_reports' },
-  ],
-};
-
 export const APPLY_COMMANDS_STEP = 'apply_commands';
 
 export interface TickOptions {
@@ -103,6 +69,7 @@ export interface TickReport {
   readonly executedSteps: readonly string[];
   readonly transactions: readonly Transaction[];
   readonly rejectedCommands: readonly CommandRejection[];
+  readonly events: readonly GameEvent[];
 }
 
 export interface TickResult {
@@ -147,6 +114,7 @@ export function runTick(
   const date = dateOfTick(draft.tick, calendar);
   const transactions: Transaction[] = [];
   const executedSteps: string[] = [];
+  const events: GameEvent[] = [];
   const streams = new Map<string, Rng>();
 
   const ctx: TickContext = {
@@ -166,9 +134,16 @@ export function runTick(
       transactions.push(transaction);
       return transaction;
     },
+    emit(event) {
+      events.push(event);
+    },
   };
 
-  const rejectedCommands = applyCommands(ctx, commands, options.commandHandlers ?? {});
+  const rejectedCommands = applyCommands(
+    ctx,
+    commands,
+    options.commandHandlers ?? DEFAULT_COMMAND_HANDLERS,
+  );
   executedSteps.push(APPLY_COMMANDS_STEP);
 
   const pipeline = options.pipeline ?? DEFAULT_PIPELINE;
@@ -184,7 +159,10 @@ export function runTick(
   }
 
   draft.tick += 1;
-  return { state: draft, report: { date, executedSteps, transactions, rejectedCommands } };
+  return {
+    state: draft,
+    report: { date, executedSteps, transactions, rejectedCommands, events },
+  };
 }
 
 function applyCommands(

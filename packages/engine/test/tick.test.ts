@@ -24,7 +24,7 @@ const SEASON_TICKS = config.global.time.ticksPerMonth * config.global.time.month
 const PLAYERS = ['player:1', 'player:2', 'player:3', 'player:4'];
 
 function cityWithPlayers(seed: string): CityState {
-  const state = createCityState({ cityId: 'test', seed });
+  const state = createCityState({ cityId: 'test', seed, config });
   for (const id of PLAYERS) {
     openAccount(state.ledger, id);
   }
@@ -102,7 +102,7 @@ function playSeason(seed: string): { state: CityState; fingerprints: string[] } 
 
 describe('tick', () => {
   it('esegue le fasi settimanali e, a fine mese, anche quelle mensili', () => {
-    let state = createCityState({ cityId: 'test', seed: 'fasi' });
+    let state = createCityState({ cityId: 'test', seed: 'fasi', config });
     const weeklyNames = DEFAULT_PIPELINE.weekly.map((s) => s.name);
     const monthlyNames = DEFAULT_PIPELINE.monthly.map((s) => s.name);
 
@@ -237,7 +237,10 @@ describe('tick', () => {
   });
 
   it('non elabora tick oltre la fine della stagione', () => {
-    const state = { ...createCityState({ cityId: 'test', seed: 'fine' }), tick: SEASON_TICKS };
+    const state = {
+      ...createCityState({ cityId: 'test', seed: 'fine', config }),
+      tick: SEASON_TICKS,
+    };
     expect(() => runTick(state, [], config)).toThrow(SeasonOverError);
   });
 });

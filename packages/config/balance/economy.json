@@ -17,7 +17,7 @@
     "rndQualityWeight": 0.5,
     "inputQualityExponent": 0.3,
     "baseQuality": 0.8,
-    "serviceReferenceShare": 0.005,
+    "serviceReferenceShare": 0.05,
     "serviceMaxBonus": 0.4,
     "locationSpread": 0.15,
     "overheadBase": 0.05,
@@ -38,10 +38,12 @@
       "srl": 50,
       "spa": 10000,
       "spa_with_license": 10000
-    }
+    },
+    "unemploymentBenefitShare": 0.6,
+    "unemploymentBenefitMonths": 6
   },
   "demand": {
-    "payrollMultiplierMin": 0.9,
+    "payrollMultiplierMin": 1.0,
     "payrollMultiplierMax": 1.2,
     "payrollReferenceMonthly": 500000,
     "minimumDemandMultiplier": 0.5
@@ -59,54 +61,119 @@
     "stabilizerMin": 0.8,
     "stabilizerMax": 1.2,
     "stabilizerTolerance": 0.01,
-    "monthlyEventProbability": 0.6
+    "monthlyEventProbability": 0.25,
+    "phillipsSlope": 0.5,
+    "maxAnnualCostInflation": 0.1,
+    "minAnnualCostInflation": -0.02
   },
   "events": [
     {
       "id": "energy_crisis",
-      "durationMonths": { "min": 3, "max": 9 },
+      "durationMonths": {
+        "min": 3,
+        "max": 9
+      },
       "effects": [
-        { "sector": "energy", "operatorPrice": 1.3 },
-        { "sector": "all", "demand": 0.97 }
+        {
+          "sector": "energy",
+          "operatorPrice": 1.3
+        },
+        {
+          "sector": "all",
+          "demand": 0.97
+        }
       ]
     },
     {
       "id": "bad_harvest",
-      "durationMonths": { "min": 3, "max": 6 },
+      "durationMonths": {
+        "min": 3,
+        "max": 6
+      },
       "effects": [
-        { "sector": "raw_materials", "operatorPrice": 1.25 },
-        { "sector": "food_service", "demand": 0.97 }
+        {
+          "sector": "raw_materials",
+          "operatorPrice": 1.25
+        },
+        {
+          "sector": "food_service",
+          "demand": 0.97
+        }
       ]
     },
     {
       "id": "tech_boom",
-      "durationMonths": { "min": 6, "max": 12 },
-      "effects": [{ "sector": "technology", "demand": 1.25 }]
+      "durationMonths": {
+        "min": 6,
+        "max": 12
+      },
+      "effects": [
+        {
+          "sector": "technology",
+          "demand": 1.25
+        }
+      ]
     },
     {
       "id": "construction_boom",
-      "durationMonths": { "min": 6, "max": 12 },
+      "durationMonths": {
+        "min": 6,
+        "max": 12
+      },
       "effects": [
-        { "sector": "construction", "demand": 1.25 },
-        { "sector": "raw_materials", "demand": 1.1 }
+        {
+          "sector": "construction",
+          "demand": 1.25
+        },
+        {
+          "sector": "raw_materials",
+          "demand": 1.1
+        }
       ]
     },
     {
       "id": "recession",
-      "durationMonths": { "min": 6, "max": 12 },
-      "effects": [{ "sector": "all", "demand": 0.9 }]
+      "durationMonths": {
+        "min": 6,
+        "max": 12
+      },
+      "effects": [
+        {
+          "sector": "all",
+          "demand": 0.9
+        }
+      ],
+      "group": "business_cycle"
     },
     {
       "id": "expansion",
-      "durationMonths": { "min": 6, "max": 12 },
-      "effects": [{ "sector": "all", "demand": 1.08 }]
+      "durationMonths": {
+        "min": 6,
+        "max": 12
+      },
+      "effects": [
+        {
+          "sector": "all",
+          "demand": 1.08
+        }
+      ],
+      "group": "business_cycle"
     },
     {
       "id": "tourism_season",
-      "durationMonths": { "min": 3, "max": 4 },
+      "durationMonths": {
+        "min": 3,
+        "max": 4
+      },
       "effects": [
-        { "sector": "food_service", "demand": 1.15 },
-        { "sector": "retail", "demand": 1.05 }
+        {
+          "sector": "food_service",
+          "demand": 1.15
+        },
+        {
+          "sector": "retail",
+          "demand": 1.05
+        }
       ]
     }
   ],
@@ -128,9 +195,18 @@
   },
   "taxes": {
     "personalBrackets": [
-      { "upTo": 2000, "rate": 0.15 },
-      { "upTo": 6000, "rate": 0.28 },
-      { "upTo": null, "rate": 0.4 }
+      {
+        "upTo": 2000,
+        "rate": 0.15
+      },
+      {
+        "upTo": 6000,
+        "rate": 0.28
+      },
+      {
+        "upTo": null,
+        "rate": 0.4
+      }
     ],
     "corporate": 0.22,
     "capital": 0.2
