@@ -142,6 +142,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - inflazione e disoccupazione entro gli obiettivi;
   - nessun settore sistematicamente morto;
   - test di causalità superato: un'azienda con fattori migliori cresce più delle altre.
+- **Esito** (1.000 stagioni, 200 bot ciascuna): nessuna violazione delle invarianti, inflazione media 3,1%, disoccupazione media 4,2%, aziende di giocatori in tutti i 9 settori al mese 24; test di causalità superato. Report completo: [`docs/report/fase-1-bilanciamento.md`](./report/fase-1-bilanciamento.md).
 - **Indicazioni per la Fase 2** (emerse dalle simulazioni):
   - il Valore Economico degli imprenditori è molto più alto di quello delle altre classi, perché la ditta è valutata con il multiplo di settore sull'utile annuo; servono le carriere dei dipendenti, gli studi dei professionisti e gli strumenti degli investitori, e va deciso se la ditta individuale debba avere un multiplo più basso;
   - in Fase 1 l'investitore ha solo il fondo indice: è la classe più debole finché non arrivano prestiti tra giocatori, immobili e borsa;
