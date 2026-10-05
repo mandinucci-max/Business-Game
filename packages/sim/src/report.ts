@@ -96,7 +96,7 @@ export function buildReport(
       targets.companyFailureRatePerSeason,
       true,
       {
-        note: 'dipende dalla concorrenza tra giocatori: si valuta dalla Fase 2',
+        note: 'dipende dai bot e dalla concorrenza tra giocatori: si rivaluta in Fase 4',
         informative: true,
       },
     ),
@@ -112,7 +112,7 @@ export function buildReport(
             : 'fuori',
     },
     rangeCheck('Disuguaglianza del VE (Gini)', mean(ginis), targets.netWorthGini, false, {
-      note: 'si valuta dalla Fase 2',
+      note: 'informativo',
       informative: true,
     }),
     rangeCheck(
