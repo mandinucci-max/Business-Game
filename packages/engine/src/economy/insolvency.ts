@@ -78,6 +78,15 @@ export function bankruptPlayer(ctx: TickContext, player: Player): void {
     }
   }
 
+  // Le offerte di prestito vengono ritirate e il denaro accantonato torna disponibile.
+  const escrow = `escrow:${player.id}`;
+  for (const offer of Object.values(state.loanOffers)) {
+    if (offer.lenderId === player.id) Reflect.deleteProperty(state.loanOffers, offer.id);
+  }
+  if (Object.hasOwn(state.ledger.accounts, escrow)) {
+    const held = balanceOf(state.ledger, escrow);
+    if (held > 0) transfer(ctx, escrow, player.account, amount(held), 'bankruptcy:escrow');
+  }
   const fund = balanceOf(state.ledger, player.fundAccount);
   if (fund > 0) {
     transfer(ctx, player.fundAccount, player.account, amount(fund), 'bankruptcy:fund');

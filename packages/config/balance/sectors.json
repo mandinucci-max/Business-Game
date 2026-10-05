@@ -8,7 +8,7 @@
       "brand": 0.2,
       "location": 0
     },
-    "valuationMultiple": 8,
+    "valuationMultiple": 6,
     "inputShares": {
       "raw_materials": 0.3,
       "manufacturing": 0.1,
@@ -19,11 +19,11 @@
       "basePrice": 10,
       "laborShare": 0.15,
       "npcWageMonthly": 2600,
-      "baseRentMonthly": 1500,
+      "baseRentMonthly": 1000,
       "npcDemandFloorWeekly": 45000,
       "interestRateSensitivity": 0.5,
       "customers": "mixed",
-      "capexPerWorker": 60000
+      "capexPerWorker": 50000
     }
   },
   "raw_materials": {
@@ -35,7 +35,7 @@
       "brand": 0.1,
       "location": 0
     },
-    "valuationMultiple": 6,
+    "valuationMultiple": 4,
     "inputShares": {
       "energy": 0.2,
       "manufacturing": 0.05,
@@ -46,11 +46,11 @@
       "basePrice": 20,
       "laborShare": 0.4,
       "npcWageMonthly": 2000,
-      "baseRentMonthly": 1200,
+      "baseRentMonthly": 700,
       "npcDemandFloorWeekly": 9000,
       "interestRateSensitivity": 1.0,
       "customers": "business",
-      "capexPerWorker": 25000
+      "capexPerWorker": 20000
     }
   },
   "manufacturing": {
@@ -62,7 +62,7 @@
       "brand": 0.4,
       "location": 0
     },
-    "valuationMultiple": 8,
+    "valuationMultiple": 5,
     "inputShares": {
       "energy": 0.15,
       "raw_materials": 0.4,
@@ -73,11 +73,11 @@
       "basePrice": 50,
       "laborShare": 0.2,
       "npcWageMonthly": 2300,
-      "baseRentMonthly": 2500,
+      "baseRentMonthly": 1200,
       "npcDemandFloorWeekly": 6000,
       "interestRateSensitivity": 1.5,
       "customers": "business",
-      "capexPerWorker": 20000
+      "capexPerWorker": 16000
     }
   },
   "construction": {
@@ -89,7 +89,7 @@
       "brand": 0.4,
       "location": 0
     },
-    "valuationMultiple": 7,
+    "valuationMultiple": 5,
     "inputShares": {
       "energy": 0.05,
       "raw_materials": 0.25,
@@ -101,11 +101,11 @@
       "basePrice": 200,
       "laborShare": 0.2,
       "npcWageMonthly": 2400,
-      "baseRentMonthly": 1500,
+      "baseRentMonthly": 800,
       "npcDemandFloorWeekly": 3000,
       "interestRateSensitivity": 4.0,
       "customers": "business",
-      "capexPerWorker": 12000
+      "capexPerWorker": 10000
     }
   },
   "logistics": {
@@ -117,7 +117,7 @@
       "brand": 0.2,
       "location": 0
     },
-    "valuationMultiple": 7,
+    "valuationMultiple": 5,
     "inputShares": {
       "energy": 0.25,
       "manufacturing": 0.05,
@@ -127,11 +127,11 @@
       "basePrice": 10,
       "laborShare": 0.45,
       "npcWageMonthly": 2100,
-      "baseRentMonthly": 1500,
+      "baseRentMonthly": 600,
       "npcDemandFloorWeekly": 18000,
       "interestRateSensitivity": 1.0,
       "customers": "business",
-      "capexPerWorker": 15000
+      "capexPerWorker": 6000
     }
   },
   "technology": {
@@ -143,7 +143,7 @@
       "brand": 0.6,
       "location": 0
     },
-    "valuationMultiple": 15,
+    "valuationMultiple": 8,
     "inputShares": {
       "energy": 0.1,
       "manufacturing": 0.05
@@ -152,11 +152,11 @@
       "basePrice": 40,
       "laborShare": 0.6,
       "npcWageMonthly": 3200,
-      "baseRentMonthly": 1500,
+      "baseRentMonthly": 700,
       "npcDemandFloorWeekly": 7500,
       "interestRateSensitivity": 1.0,
       "customers": "mixed",
-      "capexPerWorker": 5000
+      "capexPerWorker": 3000
     }
   },
   "retail": {
@@ -168,7 +168,7 @@
       "brand": 0.6,
       "location": 0.8
     },
-    "valuationMultiple": 8,
+    "valuationMultiple": 5,
     "inputShares": {
       "energy": 0.05,
       "manufacturing": 0.5,
@@ -179,11 +179,11 @@
       "basePrice": 30,
       "laborShare": 0.15,
       "npcWageMonthly": 1900,
-      "baseRentMonthly": 1800,
+      "baseRentMonthly": 900,
       "npcDemandFloorWeekly": 36000,
       "interestRateSensitivity": 1.0,
       "customers": "consumer",
-      "capexPerWorker": 8000
+      "capexPerWorker": 5000
     }
   },
   "food_service": {
@@ -195,7 +195,7 @@
       "brand": 0.4,
       "location": 0.9
     },
-    "valuationMultiple": 7,
+    "valuationMultiple": 4,
     "inputShares": {
       "energy": 0.1,
       "raw_materials": 0.35,
@@ -206,11 +206,11 @@
       "basePrice": 15,
       "laborShare": 0.35,
       "npcWageMonthly": 1800,
-      "baseRentMonthly": 1200,
+      "baseRentMonthly": 600,
       "npcDemandFloorWeekly": 60000,
       "interestRateSensitivity": 0.8,
       "customers": "consumer",
-      "capexPerWorker": 8000
+      "capexPerWorker": 5000
     }
   },
   "finance": {
@@ -222,7 +222,7 @@
       "brand": 0.5,
       "location": 0.2
     },
-    "valuationMultiple": 10,
+    "valuationMultiple": 7,
     "inputShares": {
       "energy": 0.03,
       "technology": 0.15
@@ -231,11 +231,11 @@
       "basePrice": 20,
       "laborShare": 0.5,
       "npcWageMonthly": 3000,
-      "baseRentMonthly": 2000,
+      "baseRentMonthly": 1000,
       "npcDemandFloorWeekly": 7500,
       "interestRateSensitivity": 2.0,
       "customers": "mixed",
-      "capexPerWorker": 8000
+      "capexPerWorker": 6000
     }
   }
 }

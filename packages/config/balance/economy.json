@@ -20,10 +20,10 @@
     "serviceReferenceShare": 0.05,
     "serviceMaxBonus": 0.4,
     "locationSpread": 0.15,
-    "overheadBase": 0.05,
+    "overheadBase": 0.15,
     "overheadReferenceWorkers": 20,
     "maxOverhead": 0.5,
-    "rentPerWorkerFactor": 0.1,
+    "rentPerWorkerFactor": 0.2,
     "equipmentMonthlyDepreciation": 0.01,
     "minimumEquipmentCoverage": 0.5
   },
@@ -67,8 +67,8 @@
     "phillipsSlope": 0.5,
     "maxAnnualCostInflation": 0.1,
     "minAnnualCostInflation": -0.02,
-    "migrationSensitivity": 0.2,
-    "maxMonthlyMigration": 0.01
+    "migrationSensitivity": 0.3,
+    "maxMonthlyMigration": 0.015
   },
   "events": [
     {

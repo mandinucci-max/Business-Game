@@ -78,7 +78,15 @@ export interface Player extends Debtor {
   creditRating: CreditRating;
   companyIds: CompanyId[];
   /** Redditi del mese in corso, per tasse e rating. */
-  month: { earnedIncome: Amount; capitalIncome: Amount; debtService: Amount };
+  month: {
+    earnedIncome: Amount;
+    capitalIncome: Amount;
+    /** Redditi passivi del mese (GDD §18.1): affitti, interessi, royalty, fondo, dividendi di minoranza. */
+    passiveIncome: Amount;
+    debtService: Amount;
+  };
+  /** Redditi passivi degli ultimi 12 mesi: la loro media entra nel Valore Economico. */
+  passiveHistory: Amount[];
   lastMonthIncome: Amount;
   bankruptcies: number;
   lastBankruptcyTick: number | null;

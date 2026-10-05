@@ -16,7 +16,7 @@
     "churnSatisfactionSensitivity": 2.0,
     "competitorPressure": 0.5,
     "brandMonthlyDecay": 0.05,
-    "overheadExponent": 1.3,
+    "overheadExponent": 1.5,
     "professionalServiceEffectCap": 0.25
   },
   "fees": {

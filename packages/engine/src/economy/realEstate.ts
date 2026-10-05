@@ -112,6 +112,7 @@ export function distributeRents(ctx: TickContext, kind: PropertyKind): void {
     if (value > 0) {
       postings.push({ account: owner.account, amount: amount(value) });
       owner.month.capitalIncome = add(owner.month.capitalIncome, amount(value));
+      owner.month.passiveIncome = add(owner.month.passiveIncome, amount(value));
       paid += value;
     }
   });

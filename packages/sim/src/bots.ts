@@ -1,18 +1,23 @@
 import type { BalanceConfig, ClassId, SectorId, SkillId } from '@business-game/config';
 import {
+  type Amount,
   type CityState,
   type Command,
   type Company,
   type Player,
   type Rng,
   balanceOf,
+  companyValue,
   committedHours,
   hasClass,
   hourLimit,
   inputRequirements,
+  investmentAssets,
   investorLevel,
+  capRate,
   lendingRate,
   rentalMarket,
+  requiredEquipment,
   roleSkillOf,
   skillLevel,
   unitPrice,
@@ -157,7 +162,7 @@ function manageCompany(
   const laborCost = wage / config.global.time.ticksPerMonth / unitsPerWorker;
   const weeklyUnits = Math.max(1, Math.min(company.customers, company.capacity));
   const rentCost =
-    (economics.baseRentMonthly * state.macro.costIndex * (1 + company.npcWorkers * 0.1)) /
+    (economics.baseRentMonthly * state.macro.costIndex * (1 + company.npcWorkers * 0.2)) /
     config.global.time.ticksPerMonth /
     weeklyUnits;
   const unitCost = inputCost + laborCost + rentCost;
@@ -177,8 +182,16 @@ function manageCompany(
   let workers = company.npcWorkers;
   const monthlyPayroll = wage * Math.max(1, workers);
   const unemployed = Math.floor(state.macro.laborForce - state.macro.employment);
-  if (demandRatio > 1.2 && workers < maxWorkers && cash > monthlyPayroll * 0.5 && unemployed > 2) {
-    workers += Math.min(unemployed - 2, strategy.name === 'aggressive' ? 2 : 1);
+  const step = Math.min(unemployed - 2, strategy.name === 'aggressive' ? 2 : 1);
+  // Assumere richiede le attrezzature per i nuovi lavoratori, pagate dalla cassa.
+  const equipment = toCredits(company.equipment);
+  const capexForHire = Math.max(
+    0,
+    requiredEquipment(state, config, sector, workers + Math.max(1, step)) - equipment,
+  );
+  const canAffordHire = cash > monthlyPayroll * 0.5 + capexForHire;
+  if (demandRatio > 1.2 && workers < maxWorkers && canAffordHire && step > 0) {
+    workers += step;
   } else if (demandRatio < 0.6 && workers > 1) {
     workers -= 1;
   }
@@ -187,8 +200,49 @@ function manageCompany(
     add('company.setWorkforce', { companyId: company.id, workers, wage: round2(wage) });
   }
 
+  // Crescita a credito: se la domanda supera la capacità e mancano i soldi per le attrezzature,
+  // chiede un prestito in banca (le rate restano entro il limite rispetto ai ricavi).
+  if (
+    monthStart &&
+    demandRatio > 1.2 &&
+    !canAffordHire &&
+    workers < maxWorkers &&
+    capexForHire > 0 &&
+    company.creditRating !== 'D' &&
+    strategy.name !== 'prudent'
+  ) {
+    add('loan.request', {
+      companyId: company.id,
+      amount: round2(capexForHire + monthlyPayroll * 0.5),
+      months: 36,
+    });
+  }
+
+  // Manutenzione: riacquista le attrezzature consumate se la cassa lo permette.
+  const shortfall = requiredEquipment(state, config, sector, company.npcWorkers) - equipment;
+  if (monthStart && shortfall > 0 && cash > shortfall + monthlyPayroll) {
+    add('company.buyEquipment', { companyId: company.id, amount: round2(shortfall) });
+  }
+
+  // Le società che vorrebbero crescere ma non hanno capitale vendono quote agli investitori.
+  if (
+    monthStart &&
+    company.legalForm !== 'sole_proprietorship' &&
+    company.equityOffer === null &&
+    demandRatio > 1.2 &&
+    !canAffordHire &&
+    (company.shares[company.ownerId] ?? 0) * 0.85 >= 0.5
+  ) {
+    const value = toCredits(companyValue(state, config, company));
+    const price = Math.max(5000, value * 0.15 * 0.95);
+    add('equity.offer', { companyId: company.id, share: 0.15, price: round2(price) });
+  }
+
   // Budget come quota del ricavo settimanale; si azzera se la cassa è sotto un mese di salari.
-  const weeklyRevenue = toCredits(company.lastMonth.revenue) / config.global.time.ticksPerMonth;
+  // I budget si calcolano sul margine lordo: nei settori ad alto volume il fatturato inganna.
+  const grossMargin = Math.max(0, (price - unitCost) / price);
+  const weeklyRevenue =
+    (toCredits(company.lastMonth.revenue) / config.global.time.ticksPerMonth) * grossMargin * 4;
   const healthy = cash > monthlyPayroll;
   const budget = {
     marketing: round2(healthy ? weeklyRevenue * strategy.marketingShare : 0),
@@ -232,8 +286,8 @@ function managePersonalFinance(
     const economics = config.sectors[company.sector].economics;
     const fixedCosts =
       toCredits(company.wage) * company.npcWorkers +
-      economics.baseRentMonthly * state.macro.costIndex * (1 + 0.1 * company.npcWorkers);
-    const reserve = fixedCosts * (company.legalForm === 'sole_proprietorship' ? 0.3 : 0.6);
+      economics.baseRentMonthly * state.macro.costIndex * (1 + 0.2 * company.npcWorkers);
+    const reserve = fixedCosts * 0.3;
     const profit = Math.max(
       0,
       toCredits(company.lastMonth.revenue) - toCredits(company.lastMonth.costs),
@@ -290,10 +344,14 @@ function managePersonalFinance(
 }
 
 /** Obiettivo di studio per classe: la competenza che sblocca il prossimo passo di carriera. */
-function studyTarget(config: BalanceConfig, player: Player): SkillId | null {
+function studyTarget(config: BalanceConfig, player: Player, strategy: Strategy): SkillId | null {
   const level = (skill: SkillId) => skillLevel(config, player, skill);
   const role = roleSkillOf(config, player);
   const goals: [SkillId, number][] = [];
+  // Chi punta in alto prepara presto la strada d'impresa (Gestione per lo sblocco).
+  if (strategy.name !== 'prudent' && !hasClass(player, 'entrepreneur')) {
+    goals.push(['management', config.progression.unlock.entrepreneur.management]);
+  }
   if (hasClass(player, 'employee') && role !== null) goals.push([role, 7], ['management', 7]);
   if (hasClass(player, 'freelancer') && role !== null) goals.push([role, 8], ['management', 3]);
   if (hasClass(player, 'entrepreneur')) goals.push(['management', 6], ['commercial', 6]);
@@ -324,7 +382,7 @@ function manageCareer(
   const p = config.progression;
 
   // Studio: le ore libere, con un margine che dipende dalla propensione al rischio e dal benessere.
-  const target = studyTarget(config, player);
+  const target = studyTarget(config, player, strategy);
   const free =
     hourLimit(config, player) -
     committedHours(state, config, player) +
@@ -430,16 +488,18 @@ function manageCareer(
     for (const kind of ['residential', 'commercial'] as const) {
       const price = unitPrice(state, config, kind) * (1 + p.realEstate.transactionFee);
       const market = rentalMarket(state, config, kind);
+      // Occupazione attesa aggiungendo un'unità al mercato.
+      const occupancy = market.demand > 0 ? Math.min(1, market.demand / (market.supply + 1)) : 0;
       const yieldRate =
         (unitRent(state, config, kind) *
           12 *
           (1 - p.realEstate.maintenanceShare) *
-          Math.max(0.5, market.occupancy)) /
+          Math.max(0.5, occupancy)) /
         price;
       const fundRate = state.macro.policyRate + config.economy.indexFund.equityPremium;
       if (
         yieldRate > fundRate * 0.9 &&
-        market.occupancy > 0.95 &&
+        occupancy > 0.95 &&
         owned < (level?.maxPropertyUnits ?? 0) &&
         investable > price
       ) {
@@ -452,6 +512,59 @@ function manageCareer(
         break;
       }
     }
+    // Quote delle società: rendimento sull'utile oppure crescita forte (logica da venture capital).
+    const allocation =
+      strategy.name === 'aggressive' ? 0.6 : strategy.name === 'random' ? 0.4 : 0.25;
+    const candidates = Object.values(state.companies)
+      .filter((c) => c.equityOffer !== null && c.status === 'active' && c.ownerId !== player.id)
+      .map((company) => {
+        const history = company.profitHistory.map((x) => x / 100);
+        const recent = average(history.slice(-3));
+        const before = average(history.slice(-6, -3));
+        const growth = history.length >= 6 && before > 0 ? recent / before - 1 : 0;
+        const offer = company.equityOffer as { share: number; price: Amount };
+        const earningsYield = (recent * 12 * offer.share) / toCredits(offer.price);
+        return { company, offer, growth, earningsYield, recent };
+      })
+      .filter((c) => c.recent > 0 && (c.earningsYield >= 0.12 || c.growth > 0.15))
+      .sort((a, b) => b.growth + b.earningsYield - (a.growth + a.earningsYield));
+    const pickedOffer = candidates[0];
+    if (pickedOffer !== undefined) {
+      const price = toCredits(pickedOffer.offer.price);
+      const budget = (cash + fund - buffer) * allocation;
+      const share =
+        Math.floor(
+          Math.min(pickedOffer.offer.share, (pickedOffer.offer.share * budget) / price) * 10_000,
+        ) / 10_000;
+      // Più investitori nello stesso turno: ognuno prova solo una parte delle volte.
+      if (share >= 0.005 && rng.chance(0.5)) {
+        const cost = (price * share) / pickedOffer.offer.share;
+        if (cash < cost + buffer) {
+          add('fund.redeem', { amount: round2(Math.min(fund, cost + buffer - cash)) });
+          cash = cost + buffer;
+        }
+        add('equity.buy', { companyId: pickedOffer.company.id, share });
+        cash -= cost;
+      }
+    }
+
+    // Leva: i più aggressivi si indebitano sul portafoglio quando gli immobili rendono più del tasso.
+    const portfolioRate = lendingRate(state, config, player.creditRating);
+    const assets = toCredits(investmentAssets(state, config, player.id));
+    const debt = Object.values(state.loans)
+      .filter((l) => l.borrower.kind === 'player' && l.borrower.id === player.id)
+      .reduce((sum, l) => sum + toCredits(l.principal), 0);
+    const room = assets * config.progression.peerLending.portfolioLoanToValue - debt;
+    if (
+      strategy.name !== 'prudent' &&
+      portfolioRate !== null &&
+      portfolioRate < capRate(state, config) &&
+      room > 5000
+    ) {
+      add('loan.portfolio', { amount: round2(room * 0.8), months: 60 });
+      cash += room * 0.8;
+    }
+
     const myOffers = Object.values(state.loanOffers).filter((o) => o.lenderId === player.id);
     const lendable = Math.min(level?.maxPeerLoan ?? 0, (cash + fund - buffer) * 0.3);
     if (myOffers.length === 0 && lendable > 2000) {
@@ -491,6 +604,10 @@ const GROWTH_SECTORS: readonly SectorId[] = [
   'retail',
   'food_service',
 ];
+
+function average(values: readonly number[]): number {
+  return values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
+}
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;

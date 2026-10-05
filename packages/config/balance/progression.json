@@ -81,7 +81,7 @@
         "management": 4,
         "reputation": 40,
         "months": 12,
-        "wageMultiplier": 2.5
+        "wageMultiplier": 2.8
       },
       {
         "id": "executive",
@@ -89,23 +89,23 @@
         "management": 7,
         "reputation": 60,
         "months": 24,
-        "wageMultiplier": 4
+        "wageMultiplier": 4.5
       }
     ],
     "freelancer": {
       "baseHourlyRate": 23.3,
-      "rateGrowthPerLevel": 0.12,
+      "rateGrowthPerLevel": 0.1,
       "establishedClientMonths": 10,
       "establishedReputation": 40,
       "establishedRateBonus": 0.2,
       "studioManagement": 3,
       "maxCollaborators": 5,
-      "collaboratorMonthlyMargin": 600,
+      "collaboratorMonthlyMargin": 350,
       "productSkill": 8,
       "productHours": 200,
       "royaltyStartMonthly": 300,
       "royaltyMonthlyGrowth": 0.05,
-      "royaltyCapMonthly": 2500
+      "royaltyCapMonthly": 1500
     },
     "entrepreneur": {
       "srlCapital": 10000,
@@ -113,7 +113,7 @@
       "spaCapital": 100000,
       "spaManagement": 6,
       "spaProfitableMonths": 12,
-      "soleProprietorshipValuationMultiple": 3,
+      "soleProprietorshipValuationMultiple": 2.5,
       "capacityBonusPerManagementLevel": 0.02,
       "brandBonusPerCommercialLevel": 0.05,
       "soleProprietorshipCapital": 5000,
@@ -175,12 +175,13 @@
     "maxMonthsInDefault": 3,
     "minAnnualRate": 0,
     "maxAnnualRate": 0.3,
-    "maxOpenOffers": 5
+    "maxOpenOffers": 5,
+    "portfolioLoanToValue": 0.5
   },
   "realEstate": {
     "residentialUnitRentMonthly": 100,
     "commercialUnitRentMonthly": 400,
-    "baseCapRate": 0.06,
+    "baseCapRate": 0.075,
     "capRateRateSensitivity": 0.5,
     "transactionFee": 0.03,
     "maintenanceShare": 0.1

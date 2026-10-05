@@ -6,7 +6,10 @@
       "cash": 10000,
       "otherAssets": 0,
       "debts": [],
-      "monthlyIncome": { "min": 2200, "max": 2200 },
+      "monthlyIncome": {
+        "min": 2200,
+        "max": 2200
+      },
       "creditRating": "A",
       "fixedSkills": {},
       "chosenSkillLevel": 2,
@@ -16,7 +19,10 @@
       "cash": 6000,
       "otherAssets": 4000,
       "debts": [],
-      "monthlyIncome": { "min": 2800, "max": 2800 },
+      "monthlyIncome": {
+        "min": 2800,
+        "max": 2800
+      },
       "creditRating": "B",
       "fixedSkills": {},
       "chosenSkillLevel": 4,
@@ -26,23 +32,43 @@
       "cash": 5000,
       "otherAssets": 30000,
       "debts": [
-        { "label": "startup_loan", "principal": 25000, "annualRate": 0.06, "termMonths": 60 }
+        {
+          "label": "startup_loan",
+          "principal": 25000,
+          "annualRate": 0.06,
+          "termMonths": 60
+        }
       ],
-      "monthlyIncome": { "min": -1000, "max": 2000 },
+      "monthlyIncome": {
+        "min": -1000,
+        "max": 2000
+      },
       "creditRating": "BB",
-      "fixedSkills": { "management": 3 },
+      "fixedSkills": {
+        "management": 3
+      },
       "chosenSkillLevel": null,
       "freeHours": 120
     },
     "investor": {
-      "cash": 40000,
+      "cash": 100000,
       "otherAssets": 0,
       "debts": [
-        { "label": "partners_capital", "principal": 30000, "annualRate": 0.04, "termMonths": 36 }
+        {
+          "label": "partners_capital",
+          "principal": 90000,
+          "annualRate": 0.03,
+          "termMonths": 60
+        }
       ],
-      "monthlyIncome": { "min": 0, "max": 0 },
+      "monthlyIncome": {
+        "min": 0,
+        "max": 0
+      },
       "creditRating": "A",
-      "fixedSkills": { "finance": 4 },
+      "fixedSkills": {
+        "finance": 4
+      },
       "chosenSkillLevel": null,
       "freeHours": 200
     }

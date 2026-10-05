@@ -7,10 +7,16 @@ import {
   SKILL_IDS,
 } from '@business-game/config';
 import { z } from 'zod';
-import { SINK_ACCOUNT, balanceOf } from './ledger';
-import { type Amount, amount, credits } from './money';
+import { SINK_ACCOUNT, balanceOf, openAccount } from './ledger';
+import { type Amount, amount, credits, multiply } from './money';
 import { type CityState, type Company, type Player, removeLoan } from './state';
-import { amortizingPayment, lendingRate, monthlyDebtService } from './economy/finance';
+import {
+  amortizingPayment,
+  lendingRate,
+  monthlyDebtService,
+  outstandingDebt,
+} from './economy/finance';
+import { investmentAssets } from './economy/valuation';
 import {
   committedHours,
   hasClass,
@@ -96,6 +102,7 @@ const schemas = {
     amount: positiveCredits,
     months: z.int().min(1),
   }),
+  'loan.portfolio': z.strictObject({ amount: positiveCredits, months: z.int().min(1) }),
   'loan.repay': z.strictObject({ loanId: z.string().min(1).max(40), amount: positiveCredits }),
   'loan.offer': z.strictObject({
     amount: positiveCredits,
@@ -183,6 +190,11 @@ function requireAffordable(
   if (existing + payment > income * config.economy.bank.maxDebtServiceRatio) {
     throw new CommandRejectedError('Le rate supererebbero il limite rispetto al reddito');
   }
+}
+
+/** Conto di garanzia dove l'investitore accantona il denaro delle sue offerte di prestito. */
+export function escrowAccount(playerId: string): string {
+  return `escrow:${playerId}`;
 }
 
 /** Acquisto di attrezzature dai fornitori gestiti dal computer (il denaro esce dal sistema). */
@@ -441,6 +453,10 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
       if (part > 0) {
         transfer(ctx, company.account, holder.account, amount(part), 'company:dividend');
         holder.month.capitalIncome = amount(holder.month.capitalIncome + part);
+        // Per il titolare il dividendo è un prelievo: il valore della società è già nel suo patrimonio.
+        if (holder.id !== company.ownerId) {
+          holder.month.passiveIncome = amount(holder.month.passiveIncome + part);
+        }
         paid += part;
       }
     });
@@ -601,6 +617,36 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
     receiveFromOutside(ctx, [{ to: borrower.account, amount: principal }], 'loan:disbursement');
   }),
 
+  // Prestito garantito dal portafoglio (solo investitori): il limite è il valore investito,
+  // non il reddito. Le rate restano a carico del giocatore come per ogni prestito.
+  'loan.portfolio': handler('loan.portfolio', (ctx, command, payload) => {
+    const { state, config } = ctx;
+    const player = requirePlayer(ctx, command);
+    requireClass(player, 'investor', 'Prestito sul portafoglio');
+    if (payload.months > config.economy.bank.maxLoanTermMonths) {
+      throw new CommandRejectedError('Durata troppo lunga');
+    }
+    const rate = lendingRate(state, config, player.creditRating);
+    if (rate === null) throw new CommandRejectedError('Rating insufficiente per il credito');
+    const principal = credits(payload.amount);
+    const limit = multiply(
+      investmentAssets(state, config, player.id),
+      config.progression.peerLending.portfolioLoanToValue,
+    );
+    if (outstandingDebt(state, 'player', player.id) + principal > limit) {
+      throw new CommandRejectedError('Oltre il limite garantito dal portafoglio');
+    }
+    addLoan(state, {
+      borrower: { kind: 'player', id: player.id },
+      principal,
+      annualRate: rate,
+      months: payload.months,
+      repayment: 'amortizing',
+      purpose: 'portfolio_loan',
+    });
+    receiveFromOutside(ctx, [{ to: player.account, amount: principal }], 'loan:disbursement');
+  }),
+
   'loan.repay': handler('loan.repay', (ctx, command, payload) => {
     const { state } = ctx;
     const loan = Object.hasOwn(state.loans, payload.loanId)
@@ -648,6 +694,11 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
     }
     const open = Object.values(state.loanOffers).filter((o) => o.lenderId === player.id).length;
     if (open >= lending.maxOpenOffers) throw new CommandRejectedError('Troppe offerte aperte');
+    // L'importo offerto viene accantonato: un'offerta è sempre coperta.
+    const escrow = escrowAccount(player.id);
+    if (!Object.hasOwn(state.ledger.accounts, escrow)) openAccount(state.ledger, escrow);
+    requireCash(ctx, player.account, credits(payload.amount));
+    transfer(ctx, player.account, escrow, credits(payload.amount), 'loan:offer_escrow');
     state.counters.offer += 1;
     const id = `o${state.counters.offer}`;
     state.loanOffers[id] = {
@@ -666,6 +717,8 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
     if (offer === undefined || offer.lenderId !== command.playerId) {
       throw new CommandRejectedError('Offerta inesistente o non tua');
     }
+    const lender = requirePlayer(ctx, command);
+    transfer(ctx, escrowAccount(lender.id), lender.account, offer.available, 'loan:offer_cancel');
     Reflect.deleteProperty(ctx.state.loanOffers, payload.offerId);
   }),
 
@@ -693,10 +746,8 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
       company,
       amortizingPayment(principal, offer.annualRate, offer.months),
     );
-    requireCash(ctx, lender.account, principal);
-
     const borrower = company ?? player;
-    transfer(ctx, lender.account, borrower.account, principal, 'loan:peer_disbursement');
+    transfer(ctx, escrowAccount(lender.id), borrower.account, principal, 'loan:peer_disbursement');
     addLoan(state, {
       borrower: company ? { kind: 'company', id: company.id } : { kind: 'player', id: player.id },
       principal,

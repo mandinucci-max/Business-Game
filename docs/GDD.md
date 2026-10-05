@@ -1,6 +1,6 @@
 # Business Game — Game Design Document
 
-> Titolo provvisorio. Versione 0.3 — documento vivo.
+> Titolo provvisorio. Versione 0.4 — documento vivo.
 > Riferimento unico per design e sviluppo. Il piano di implementazione è in [`PIANO_IMPLEMENTAZIONE.md`](./PIANO_IMPLEMENTAZIONE.md).
 
 **Convenzioni**
@@ -123,18 +123,20 @@ Decade lentamente verso 50 se si resta inattivi.
 
 ### 4.1 Condizioni di partenza (stesso patrimonio netto: 10.000 Cr)
 
-|                 | **Dipendente**                                                                   | **Libero professionista**                                 | **Imprenditore**                                        | **Investitore**                                             |
-| --------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
-| Liquidità       | 10.000                                                                           | 6.000                                                     | 5.000                                                   | 40.000                                                      |
-| Altri beni      | –                                                                                | 4.000 (attrezzatura)                                      | Ditta da 30.000                                         | –                                                           |
-| Debiti          | –                                                                                | –                                                         | 25.000 (prestito d'avviamento)                          | 30.000 (capitale dei soci, 4%/anno, restituzione a 36 mesi) |
-| Reddito         | Stipendio sicuro 2.200/mese (posto garantito in un'azienda gestita dal computer) | Circa 2.800/mese da 2 clienti, variabile                  | Utile da −1.000 a +2.000/mese                           | Nessuno                                                     |
-| Rating          | A                                                                                | B                                                         | BB                                                      | A                                                           |
-| Competenze      | Ruolo 2                                                                          | Professione 4 + abilitazione                              | Gestione 3                                              | Finanza 4                                                   |
-| Ore libere      | Circa 40                                                                         | 200 flessibili                                            | Circa 120                                               | 200                                                         |
-| Scelta iniziale | Ruolo: Operativo, Tecnico, Commerciale, Amministrativo                           | Professione: Legale, Fiscale, Marketing, Tecnico, Finanza | Settore: Ristorazione, Commercio, Tecnologia, Logistica | –                                                           |
+|                 | **Dipendente**                                                                   | **Libero professionista**                                 | **Imprenditore**                                        | **Investitore**                                                   |
+| --------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------- |
+| Liquidità       | 10.000                                                                           | 6.000                                                     | 5.000                                                   | 100.000                                                           |
+| Altri beni      | –                                                                                | 4.000 (attrezzatura)                                      | Ditta da 30.000                                         | –                                                                 |
+| Debiti          | –                                                                                | –                                                         | 25.000 (prestito d'avviamento)                          | 90.000 (capitale dei soci, 3%/anno, restituzione a fine stagione) |
+| Reddito         | Stipendio sicuro 2.200/mese (posto garantito in un'azienda gestita dal computer) | Circa 2.800/mese da 2 clienti, variabile                  | Utile da −1.000 a +2.000/mese                           | Nessuno                                                           |
+| Rating          | A                                                                                | B                                                         | BB                                                      | A                                                                 |
+| Competenze      | Ruolo 2                                                                          | Professione 4 + abilitazione                              | Gestione 3                                              | Finanza 4                                                         |
+| Ore libere      | Circa 40                                                                         | 200 flessibili                                            | Circa 120                                               | 200                                                               |
+| Scelta iniziale | Ruolo: Operativo, Tecnico, Commerciale, Amministrativo                           | Professione: Legale, Fiscale, Marketing, Tecnico, Finanza | Settore: Ristorazione, Commercio, Tecnologia, Logistica | –                                                                 |
 
 **Talento d'origine** (permanente, non acquisibile da altri): +15% di esperienza nelle competenze tipiche della classe di partenza.
+
+**Perché l'investitore parte con più capitale (Fase 2).** Le simulazioni hanno mostrato che, a parità di patrimonio netto, chi parte senza reddito è svantaggiato: lo stipendio del dipendente vale come capitale umano. L'investitore riceve quindi più capitale dei soci (90.000 Cr al 3%, da restituire a fine stagione). Il patrimonio netto resta 10.000 Cr, ma ha la massa critica per usare i soldi degli altri, che è il suo mestiere.
 
 ### 4.2 Cosa fa ogni classe
 
@@ -333,6 +335,14 @@ Le posizioni eccellenti sono rare. Ripetere la ricerca costa 5 ore + 200 Cr.
 **Edilizia**: costruisce sedi su misura con caratteristiche scelte, oltre il massimo delle posizioni casuali, a costo e tempo maggiori.
 Gli investitori comprano posizioni e le affittano: si crea un mercato immobiliare vero.
 
+### 6.2.1 Immobili (Fase 2)
+
+- **Due tipi di unità:** residenziali, affittate alle persone (la quota "casa" del paniere), e commerciali, affittate alle aziende (l'affitto della sede).
+- **Affitto di mercato:** 100 Cr al mese per un'unità residenziale e 400 per una commerciale, indicizzati ai costi.
+- **Prezzo:** affitto netto annuo diviso per il rendimento richiesto (7,5% + metà dello scostamento dei tassi dal neutrale). Con tassi alti i prezzi scendono.
+- **Mercato degli affitti:** gli affitti passano da un conto di compensazione. La quota corrispondente alle unità dei giocatori va ai proprietari (meno il 10% di manutenzione), il resto all'operatore cittadino. Se i giocatori possiedono più unità di quante ne servano, l'occupazione scende.
+- **Chi compra:** solo gli investitori, entro un numero di unità che dipende dal livello (risparmiatore 2, business angel 10, venture 100, raider 1.000). Compravendita con la città, commissione del 3%.
+
 ### 6.3 Barriere e visibilità
 
 All'inizio l'interfaccia mostra solo i settori accessibili (ditta individuale). Gli altri compaiono con SRL, SPA e licenza.
@@ -462,6 +472,13 @@ Tempo di avvio: 1 mese di gioco (ridotto dai tratti "Specialista di settore" e "
 **Senza gestione** (meno ore del necessario e nessun CEO): l'azienda va in pilota automatico con −10% di efficienza.
 
 **Remunerazione del fondatore**: stipendio (reddito attivo, tassato come persona) oppure dividendi (passivi, tassati al 20%). È una scelta educativa.
+
+### 9.2.1 Attrezzature e quote (Fase 2)
+
+- **Attrezzature:** ogni lavoratore richiede attrezzature con un costo per settore (da 3.000 Cr nella tecnologia a 50.000 nell'energia). Si comprano quando si assume e si ammortizzano dell'1% al mese (costo in conto economico). Se mancano, i lavoratori rendono meno (fino al 50%). Crescere richiede capitale: credito bancario, prestiti tra giocatori o quote.
+- **Quote:** SRL e SPA possono vendere quote agli investitori. Il denaro entra nella società come aumento di capitale, tutte le quote esistenti vengono diluite, e il titolare deve restare sopra il 50%. Dividendi e valore della società si dividono in proporzione alle quote.
+- **Fondazione di nuove aziende:** serve la classe Imprenditore attiva, il capitale minimo della forma giuridica (ditta 5.000, SRL 10.000, SPA 100.000, licenza finanziaria 500.000) e 40 ore al mese di gestione.
+- **Trasformazione:** ditta → SRL con Gestione 4 e 10.000 Cr in cassa; SRL → SPA con Gestione 6, 100.000 Cr di patrimonio e 12 mesi in utile.
 
 ### 9.3 Brevetti
 
@@ -616,7 +633,13 @@ I professionisti (Finanza, Marketing) possono vendere **report sui concorrenti**
 
 ### 12.2 Prestiti tra giocatori
 
-Tasso, durata e garanzie si negoziano. Il sistema esegue le rate in automatico; l'insolvenza è causa fondata e abbassa il rating.
+Implementati in Fase 2:
+
+- **Offerte:** l'investitore pubblica un'offerta (importo, tasso, durata) entro il limite del suo livello; l'importo viene **accantonato su un conto di garanzia**, quindi un'offerta è sempre coperta. Ritirandola, il denaro torna disponibile.
+- **Accettazione:** chiunque può accettarla, per sé o per la propria azienda, se le rate restano sostenibili rispetto al reddito (come per la banca).
+- **Rate:** il sistema le paga in automatico al prestatore. Se il debitore non paga, **nessuno copre il buco**: dopo 3 mesi di insolvenza il prestito è perso, il debitore perde reputazione.
+- **Fallimento del debitore:** la liquidazione ripaga il prestatore per quanto possibile.
+- **Prestito sul portafoglio (solo investitori):** la banca presta fino al 50% del valore degli investimenti (fondo, immobili, quote di società altrui, crediti), indipendentemente dal reddito. È la leva tipica dell'investitore.
 
 ### 12.3 Borsa
 
@@ -932,6 +955,8 @@ VE = (Patrimonio netto + Cashflow passivo mensile × 24) × Fattore reputazione 
 - conta per intero: dividendi, affitti, interessi, royalty, guadagni dei fondi;
 - conta al 50%: compensi da consigliere;
 - **non conta**: stipendi e parcelle.
+- **Si misura sull'incassato (Fase 2):** media dei redditi passivi effettivamente ricevuti negli ultimi 12 mesi.
+- **I dividendi della società che si controlla non contano:** per il titolare sono un prelievo, e il valore della società è già nel suo patrimonio.
 
 Il VE si ricalcola a ogni chiusura mensile.
 

@@ -399,6 +399,8 @@ const progressionSchema = z.strictObject({
   peerLending: z.strictObject({
     maxMonthsInDefault: z.int().min(1),
     maxOpenOffers: z.int().min(1),
+    /** Prestito garantito dal portafoglio dell'investitore: quota massima del valore investito. */
+    portfolioLoanToValue: share,
     minAnnualRate: z.number().min(0),
     maxAnnualRate: z.number().min(0),
   }),

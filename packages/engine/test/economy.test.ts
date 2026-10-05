@@ -99,7 +99,7 @@ describe('economia di base', () => {
     expect(cash('emp')).toBe(10_000);
     expect(cash('fre')).toBe(6_000);
     expect(cash('ent')).toBe(5_000);
-    expect(cash('inv')).toBe(40_000);
+    expect(cash('inv')).toBe(100_000);
     const entrepreneurLoan = Object.values(state.loans).find((l) => l.borrower.id === 'c1');
     expect(toCredits(entrepreneurLoan?.principal ?? credits(0))).toBe(25_000);
     const investorLoan = Object.values(state.loans).find((l) => l.borrower.id === 'inv');

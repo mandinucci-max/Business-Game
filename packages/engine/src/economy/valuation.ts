@@ -34,9 +34,14 @@ export function companyValue(state: CityState, config: BalanceConfig, company: C
 export function netWorth(state: CityState, config: BalanceConfig, playerId: string): Amount {
   const player = state.players[playerId];
   if (player === undefined) return ZERO;
+  const escrow = `escrow:${player.id}`;
+  const escrowed = Object.hasOwn(state.ledger.accounts, escrow)
+    ? balanceOf(state.ledger, escrow)
+    : 0;
   let total = amount(
     balanceOf(state.ledger, player.account) +
-      balanceOf(state.ledger, player.fundAccount) -
+      balanceOf(state.ledger, player.fundAccount) +
+      escrowed -
       outstandingDebt(state, 'player', player.id) -
       player.arrears,
   );
@@ -60,6 +65,11 @@ export function passiveMonthlyCashflow(
 ): Amount {
   const player = state.players[playerId];
   if (player === undefined) return ZERO;
+  // Media dei redditi passivi effettivamente incassati negli ultimi 12 mesi.
+  if (player.passiveHistory.length > 0) {
+    const sum = player.passiveHistory.reduce((total, value) => total + value, 0);
+    return amount(Math.max(0, Math.round(sum / player.passiveHistory.length)));
+  }
   const depositRate = Math.max(
     0,
     state.macro.policyRate - config.economy.bank.depositSpreadBelowPolicy,
@@ -77,6 +87,33 @@ export function passiveMonthlyCashflow(
     }
   }
   return add(total, credits(propertyIncomeMonthly(state, config, player)));
+}
+
+/**
+ * Valore degli investimenti di un giocatore (fondo, immobili, quote di società di altri, crediti):
+ * è la garanzia dei prestiti sul portafoglio dell'investitore.
+ */
+export function investmentAssets(
+  state: CityState,
+  config: BalanceConfig,
+  playerId: string,
+): Amount {
+  const player = state.players[playerId];
+  if (player === undefined) return ZERO;
+  let total = add(
+    amount(Math.max(0, balanceOf(state.ledger, player.fundAccount))),
+    credits(propertyValue(state, config, player)),
+  );
+  for (const company of Object.values(state.companies)) {
+    const share = company.shares[player.id] ?? 0;
+    if (share > 0 && company.ownerId !== player.id) {
+      total = add(total, multiply(companyValue(state, config, company), share));
+    }
+  }
+  for (const loan of Object.values(state.loans)) {
+    if (loan.lenderId === player.id) total = add(total, loan.principal);
+  }
+  return total;
 }
 
 /** Fattore reputazione del VE: da 0,9 (reputazione 0) a 1,1 (reputazione 100). */

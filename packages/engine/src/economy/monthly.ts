@@ -52,6 +52,7 @@ export function monthlyPayments(ctx: TickContext): void {
         const royalty = credits(practice.royaltyMonthly * index);
         receiveFromOutside(ctx, [{ to: player.account, amount: royalty }], 'income:royalty');
         player.month.capitalIncome = add(player.month.capitalIncome, royalty);
+        player.month.passiveIncome = add(player.month.passiveIncome, royalty);
       }
     }
     if (player.benefitMonthsLeft > 0) {
@@ -69,6 +70,7 @@ export function monthlyPayments(ctx: TickContext): void {
     if (interest > 0) {
       receiveFromOutside(ctx, [{ to: player.account, amount: interest }], 'income:deposit');
       player.month.capitalIncome = add(player.month.capitalIncome, interest);
+      player.month.passiveIncome = add(player.month.passiveIncome, interest);
     }
 
     const fund = balanceOf(state.ledger, player.fundAccount);
@@ -86,6 +88,7 @@ export function monthlyPayments(ctx: TickContext): void {
       });
     }
     player.month.capitalIncome = add(player.month.capitalIncome, fundChange);
+    player.month.passiveIncome = add(player.month.passiveIncome, fundChange);
   }
 
   const offices = rentalMarket(state, config, 'commercial');
@@ -169,6 +172,7 @@ function servicePeerLoan(
       ],
     });
     lender.month.capitalIncome = add(lender.month.capitalIncome, amount(Math.min(paid, interest)));
+    lender.month.passiveIncome = add(lender.month.passiveIncome, amount(Math.min(paid, interest)));
   }
   debtor.month.debtService = add(debtor.month.debtService, due);
   if ('npcWorkers' in debtor) debtor.month.costs = add(debtor.month.costs, interest);
@@ -266,7 +270,13 @@ export function monthlyTaxes(ctx: TickContext): void {
     player.lastMonthIncome = amount(
       taxableIncome + Math.max(0, player.month.capitalIncome) - tax - capitalTax,
     );
-    player.month = { earnedIncome: ZERO, capitalIncome: ZERO, debtService: ZERO };
+    player.passiveHistory = [...player.passiveHistory, player.month.passiveIncome].slice(-12);
+    player.month = {
+      earnedIncome: ZERO,
+      capitalIncome: ZERO,
+      passiveIncome: ZERO,
+      debtService: ZERO,
+    };
   }
 }
 
