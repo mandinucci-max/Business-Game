@@ -18,3 +18,5 @@ export {
   companyAccount,
 } from './economy/setup';
 export * from './economy/valuation';
+export * from './economy/progression';
+export * from './economy/realEstate';

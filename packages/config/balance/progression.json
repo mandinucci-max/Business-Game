@@ -178,8 +178,8 @@
     "maxOpenOffers": 5
   },
   "realEstate": {
-    "residentialUnitRentMonthly": 300,
-    "commercialUnitRentMonthly": 1200,
+    "residentialUnitRentMonthly": 100,
+    "commercialUnitRentMonthly": 400,
     "baseCapRate": 0.06,
     "capRateRateSensitivity": 0.5,
     "transactionFee": 0.03,
