@@ -404,12 +404,18 @@ function manageCareer(
   // Salti di classe.
   const wantsBusiness =
     strategy.name === 'aggressive' || (strategy.name === 'random' && rng.chance(0.5));
+  const businessCapital = p.unlock.entrepreneur.cash + buffer;
   if (
     !hasClass(player, 'entrepreneur') &&
     wantsBusiness &&
-    unlockBlocker(state, config, player, 'entrepreneur') === null &&
-    cash > p.unlock.entrepreneur.cash + buffer
+    skillLevel(config, player, 'management') >= p.unlock.entrepreneur.management &&
+    cash + fund > businessCapital + p.careers.entrepreneur.soleProprietorshipCapital * 1.5
   ) {
+    // I risparmi investiti nel fondo tornano liquidi per aprire l'attività.
+    if (cash < businessCapital) {
+      add('fund.redeem', { amount: round2(Math.min(fund, businessCapital - cash + 100)) });
+      cash = businessCapital + 100;
+    }
     add('class.unlock', { classId: 'entrepreneur' });
     const sector = STARTERS[Math.floor(rng.next() * STARTERS.length)] as SectorId;
     const capital = p.careers.entrepreneur.soleProprietorshipCapital * 1.5;
