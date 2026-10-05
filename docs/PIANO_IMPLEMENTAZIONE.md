@@ -127,7 +127,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - sicurezza di base (§5.3): scansione dei segreti, audit delle dipendenze, CodeQL, aggiornamenti automatici, `SECURITY.md`, lint anti-non-determinismo.
 - **Completamento**: CI verde; tick deterministico (stesso seed → stesso risultato); invariante verificata; controlli di sicurezza attivi.
 
-### Fase 1 — Motore economico base, offline (2–3 mesi)
+### Fase 1 — Motore economico base, offline (2–3 mesi) — ✅ completata
 
 - **Cose da consegnare**:
   - modello di mercato completo (§8);
@@ -142,6 +142,10 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - inflazione e disoccupazione entro gli obiettivi;
   - nessun settore sistematicamente morto;
   - test di causalità superato: un'azienda con fattori migliori cresce più delle altre.
+- **Indicazioni per la Fase 2** (emerse dalle simulazioni):
+  - il Valore Economico degli imprenditori è molto più alto di quello delle altre classi, perché la ditta è valutata con il multiplo di settore sull'utile annuo; servono le carriere dei dipendenti, gli studi dei professionisti e gli strumenti degli investitori, e va deciso se la ditta individuale debba avere un multiplo più basso;
+  - in Fase 1 l'investitore ha solo il fondo indice: è la classe più debole finché non arrivano prestiti tra giocatori, immobili e borsa;
+  - i fallimenti sono rari (circa 2–3% delle aziende per stagione) perché l'operatore cittadino lascia un margine ampio; con la crescita delle aziende e la concorrenza tra giocatori il dato va rivisto.
 
 ### Fase 2 — Classi, progressione e personaggio (1–1,5 mesi)
 
@@ -355,4 +359,4 @@ Si raccolgono fin dalla vertical slice:
 
 ## 9. Prossimo passo
 
-Avviare la **Fase 1** (motore economico base, offline).
+Avviare la **Fase 2** (classi, progressione e personaggio).
