@@ -14,6 +14,7 @@ import {
   inputRequirements,
   investmentAssets,
   investorLevel,
+  npcJobWage,
   capRate,
   lendingRate,
   rentalMarket,
@@ -417,6 +418,21 @@ function manageCareer(
   }
   if (!hasClass(player, 'investor') && unlockBlocker(state, config, player, 'investor') === null) {
     add('class.unlock', { classId: 'investor' });
+  }
+
+  // Quando l'attività rende più dello stipendio, il dipendente passa al part-time e poi si licenzia.
+  if (player.npcJob !== null && companies.length > 0) {
+    const profit = companies.reduce(
+      (sum, c) => sum + Math.max(0, toCredits(c.lastMonth.revenue) - toCredits(c.lastMonth.costs)),
+      0,
+    );
+    const wage = npcJobWage(state, config, player);
+    if (profit > wage * 1.5 && player.npcJob.hours < p.hours.npcJobFullTime) {
+      add('job.quitNpc', {});
+    } else if (profit > wage * 0.7 && player.npcJob.hours === p.hours.npcJobFullTime) {
+      add('job.quitNpc', {});
+      add('job.acceptNpc', { partTime: true });
+    }
   }
 
   // Libero professionista: studio associato e prodotto quando le competenze lo permettono.
