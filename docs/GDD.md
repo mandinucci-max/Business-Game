@@ -935,6 +935,8 @@ Niente chat della città né messaggi privati liberi: meno moderazione, meno tos
 
 **Vietati**: vendita di account e di Crediti per denaro reale.
 
+**Sicurezza informatica**: modello delle minacce, contromisure e controlli per fase sono nel piano di implementazione (§5).
+
 **Moderazione**: segnalazioni, filtri su chat del consorzio e messaggi delle trattative, sanzioni progressive.
 
 ---

@@ -1,6 +1,6 @@
 # Business Game — Piano di implementazione
 
-> Versione 0.2. Si basa sul [Game Design Document](./GDD.md); i riferimenti "§" rimandano alle sue sezioni.
+> Versione 0.3. Si basa sul [Game Design Document](./GDD.md); i riferimenti "§" rimandano alle sue sezioni.
 > Calibrato per **una sola persona** che sviluppa, con l'aiuto di strumenti di AI per scrivere codice. Le durate indicate sono per un impegno **a tempo pieno**: a tempo parziale vanno circa raddoppiate.
 
 ---
@@ -18,7 +18,8 @@
    - **Alpha 1**: economia reale, classi, lavoro, servizi, consorzi, stagioni.
    - **Alpha 2**: borsa, fondi, settore Finanziario, OPA e cause.
 4. **Tutto data-driven.** Ogni numero del GDD vive in configurazione: il bilanciamento non richiede di modificare il codice.
-5. **Semplicità operativa.**
+5. **Sicurezza fin dal primo giorno.** In un gioco economico competitivo un exploit vale quanto un furto: la sicurezza è integrata in ogni fase (§5), non aggiunta alla fine.
+6. **Semplicità operativa.**
    - Un solo linguaggio, un solo servizio da mettere online, un solo database.
    - Niente infrastruttura che una persona sola non riesce a mantenere.
 
@@ -114,8 +115,9 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - monorepo, lint, formattazione, CI (test a ogni push);
   - pacchetto `config` con schema di validazione e parametri dell'Appendice A;
   - scheletro del motore: tipi base, generatore casuale con seed, contabilità a partita doppia, loop del tick vuoto;
-  - test unitari e property-based; test dell'invariante monetaria.
-- **Completamento**: CI verde; tick deterministico (stesso seed → stesso risultato); invariante verificata.
+  - test unitari e property-based; test dell'invariante monetaria;
+  - sicurezza di base (§5.3): scansione dei segreti, audit delle dipendenze, CodeQL, aggiornamenti automatici, `SECURITY.md`, lint anti-non-determinismo.
+- **Completamento**: CI verde; tick deterministico (stesso seed → stesso risultato); invariante verificata; controlli di sicurezza attivi.
 
 ### Fase 1 — Motore economico base, offline (2–3 mesi)
 - **Cose da consegnare**:
@@ -145,7 +147,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - le 4 classi ai livelli iniziali;
   - mercato del lavoro e marketplace base.
 - **Cose da consegnare**:
-  - server (accesso, comandi, scheduler, persistenza);
+  - server (accesso sicuro, comandi validati e autorizzati, scheduler, persistenza);
   - web app responsive: panoramica, rapporto mensile con "Perché?", carte decisione, agenda delle ore, azienda, mercato, classifica;
   - pilota automatico base;
   - italiano e inglese.
@@ -206,6 +208,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 ### Fase 9 — Beta e lancio
 - Più istanze di città.
 - Test di carico: 500 giocatori per città, picchi ai tick.
+- Scansione dinamica e **penetration test** esterno prima del lancio (§5.3).
 - Rifinitura dell'interfaccia.
 - La monetizzazione si progetta durante la beta (GDD §21) e si attiva solo dopo il lancio.
 
@@ -222,7 +225,62 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 
 ---
 
-## 5. Strategia di test
+## 5. Sicurezza informatica
+
+In questo gioco la sicurezza ha due facce:
+- **sicurezza classica** (account, dati, server);
+- **integrità del gioco**: nessuno deve poter creare Crediti dal nulla, vedere dati riservati dei concorrenti o automatizzare il gioco in modo scorretto. L'informazione è una risorsa (GDD §17), quindi una fuga di dati è un exploit economico.
+
+### 5.1 Modello delle minacce
+| Minaccia | Esempio | Contromisure principali |
+|---|---|---|
+| Furto di account | Password riusate, phishing | Hash Argon2id, limiti ai tentativi, verifica email, 2FA opzionale (obbligatoria per gli admin), avvisi di nuovo accesso |
+| Accesso a dati altrui (IDOR) | Chiamare l'API con l'id dell'azienda di un concorrente | Autorizzazione su ogni comando e ogni lettura; **filtro di visibilità** lato server secondo GDD §17; test automatici anti-fuga |
+| Creazione di denaro / doppia spesa | Inviare due volte lo stesso ordine in parallelo | Contabilità a partita doppia con invariante; transazioni del database con lock; chiavi di idempotenza sui comandi; elaborazione seriale per città |
+| Manipolazione dei valori | Quantità negative, numeri enormi, decimali strani | Schemi di validazione condivisi su ogni comando; **Crediti come interi** (centesimi), mai numeri in virgola mobile nel registro |
+| Logica di gioco lato client | Client modificato che "decide" un esito | Server autoritativo: il client invia solo intenzioni, ogni esito è calcolato sul server |
+| Bot e script | Script che piazza ordini o vince gare d'appalto 24/7 | Limiti di frequenza per comando, vietato nei termini di servizio, analisi dei comportamenti anomali, verifica umana sui casi sospetti |
+| Account multipli | Account secondari che regalano soldi | Fascia di prezzo, limiti agli account nuovi, grafo delle transazioni (GDD §20) |
+| Attacchi web (OWASP Top 10) | XSS nella chat, CSRF, SQL injection | React con escape automatico, Content Security Policy rigorosa, cookie HttpOnly/Secure/SameSite + token CSRF, query parametrizzate, header di sicurezza, CORS ristretto |
+| WebSocket | Connessioni non autenticate, messaggi enormi | Autenticazione all'apertura, controllo dell'origine, limiti di dimensione e frequenza |
+| Negazione del servizio | Flood di richieste ai tick | CDN/WAF davanti al server, limiti per IP e per account, paginazione, limiti di dimensione delle richieste |
+| Segreti esposti | Chiavi nel repository | Segreti solo nel gestore della piattaforma di hosting, scansione dei segreti nel CI, rotazione |
+| Catena di fornitura | Pacchetto npm compromesso | Lockfile, `npm ci`, aggiornamenti automatici controllati, audit delle dipendenze, poche dipendenze |
+| Abuso degli admin | Admin che si regala Crediti | Ruoli minimi, 2FA obbligatoria, ogni azione admin registrata in modo non modificabile e visibile nei report |
+| Perdita di dati | Guasto o errore umano | Backup automatici cifrati, test di ripristino periodici, registro dei comandi per ricostruire lo stato |
+
+### 5.2 Principi tecnici
+- **Server autoritativo e deterministico**: il motore gira solo sul server; il registro dei comandi permette di ricostruire e verificare ogni partita.
+- **Denaro come interi**: 1 Cr = 100 unità intere; ogni importo è verificato come intero sicuro; gli arrotondamenti seguono una regola unica e documentata.
+- **Determinismo**: vietati `Math.random` e l'ora di sistema nel motore (controllo automatico nel lint); versione di Node fissata, perché le funzioni matematiche possono differire tra versioni.
+- **Validazione ai confini**: ogni comando e ogni configurazione passano da uno schema; ciò che non è valido viene rifiutato, mai "corretto".
+- **Privilegio minimo**: utente del database dell'applicazione senza permessi di amministrazione; CI con permessi minimi.
+- **Dati personali minimi** (GDPR, pubblico internazionale): solo email e dati di gioco; informativa privacy; esportazione e cancellazione dell'account; nessun dato personale nei log.
+- **Cifratura**: TLS ovunque; database e backup cifrati dal provider.
+- **Pagamenti** (quando ci sarà la monetizzazione): solo tramite un provider certificato, nessun dato di carta sui nostri server, verifica degli acquisti lato server.
+
+### 5.3 Sicurezza per fase
+| Fase | Cosa si aggiunge |
+|---|---|
+| 0 | CI con scansione dei segreti, audit delle dipendenze, analisi statica del codice (CodeQL), aggiornamenti automatici delle dipendenze; Crediti interi; registro a partita doppia; lint che vieta fonti di non-determinismo; `SECURITY.md` per le segnalazioni |
+| 1–2 | Test property-based sull'invariante monetaria per ogni nuova meccanica; test di exploit economici con bot "avversari" |
+| 3 | Autenticazione (Argon2id, sessioni sicure, limiti ai tentativi), autorizzazione su ogni comando, filtro di visibilità, header di sicurezza e CSP, limiti di frequenza, idempotenza dei comandi |
+| 4–5 | Test di concorrenza su contratti, mercato e cassa del consorzio (doppia spesa, condizioni di gara); moderazione dei messaggi |
+| 6 | Test automatici anti-fuga di informazioni per ogni livello di visibilità (§17) |
+| 7 | Admin con 2FA e registro delle azioni; rilevamento di bot e account multipli; backup e test di ripristino; informativa privacy, esportazione e cancellazione dei dati |
+| 8 | Test di manipolazione della borsa e di concorrenza sul registro degli ordini; verifiche di copertura delle OPA |
+| 9 | Scansione dinamica (OWASP ZAP), test di carico e di resistenza al flood, **penetration test** esterno prima del lancio, piano di risposta agli incidenti |
+
+### 5.4 Risposta agli incidenti
+- **Interruttori per funzione**: ogni sistema (borsa, OPA, marketplace) si può sospendere senza fermare il gioco.
+- **Congelamento** di account e transazioni sospette.
+- **Ripristino**: tornare a uno snapshot e rielaborare i comandi validi, escludendo quelli dell'exploit.
+- **Monitoraggio economico**: allarmi su salti di patrimonio anomali, creazione di denaro fuori dalle regole, picchi di comandi.
+- **Comunicazione**: `SECURITY.md` e `security.txt` per le segnalazioni; eventuale programma di bug bounty dopo il lancio.
+
+---
+
+## 6. Strategia di test
 | Livello | Cosa verifica |
 |---|---|
 | Unitari | Ogni formula del GDD (attrattività, churn, tasse, rating, cause, high-water mark, fasce di apertura) |
@@ -231,11 +289,12 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
 | Regressione | Seed fissi con risultati salvati: ogni cambio dei numeri deve essere intenzionale |
 | Bilanciamento | Monte Carlo notturno nel CI, con avviso se un obiettivo di salute esce dalla fascia |
 | Carico | Tick di una città da 500 giocatori in meno di 30 secondi |
+| Sicurezza | Analisi statica, audit delle dipendenze, scansione dei segreti, test anti-fuga e di concorrenza, scansione dinamica, penetration test (§5.3) |
 | Gioco reale | Vertical slice, Alpha 1, Alpha 2: questionari e telemetria |
 
 ---
 
-## 6. Telemetria per il bilanciamento
+## 7. Telemetria per il bilanciamento
 Si raccolgono fin dalla vertical slice:
 - distribuzione del VE per classe;
 - tempi di progressione;
@@ -251,7 +310,7 @@ Si raccolgono fin dalla vertical slice:
 
 ---
 
-## 7. Rischi principali e mitigazioni
+## 8. Rischi principali e mitigazioni
 | Rischio | Mitigazione |
 |---|---|
 | Tempi lunghi per una persona sola | Due alpha, ambito tagliabile, AI per il codice ripetitivo, test che proteggono il motore |
@@ -263,8 +322,9 @@ Si raccolgono fin dalla vertical slice:
 | Abusi e account multipli | Fascia di prezzo, grafo delle transazioni, registro dei comandi |
 | Moderazione | Solo chat del consorzio e messaggi delle trattative al lancio |
 | Manutenzione dell'infrastruttura | Un solo servizio, PostgreSQL gestito, niente Redis |
+| Exploit economici e furti di account | Sicurezza integrata in ogni fase (§5), registro dei comandi, interruttori per funzione, ripristino |
 
 ---
 
-## 8. Prossimo passo
+## 9. Prossimo passo
 Avviare la **Fase 0**.
