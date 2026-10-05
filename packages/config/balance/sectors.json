@@ -3,36 +3,89 @@
     "entryLegalForm": "spa",
     "priceElasticity": 0.6,
     "baseMonthlyChurn": 0.01,
-    "attractivenessExponents": { "quality": 0.3, "brand": 0.2, "location": 0 },
+    "attractivenessExponents": {
+      "quality": 0.3,
+      "brand": 0.2,
+      "location": 0
+    },
     "valuationMultiple": 8,
     "inputShares": {
       "raw_materials": 0.3,
       "manufacturing": 0.1,
       "logistics": 0.05,
       "technology": 0.05
+    },
+    "economics": {
+      "basePrice": 10,
+      "laborShare": 0.15,
+      "npcWageMonthly": 2600,
+      "baseRentMonthly": 1500,
+      "npcDemandFloorWeekly": 15000,
+      "interestRateSensitivity": 0.5,
+      "customers": "mixed"
     }
   },
   "raw_materials": {
     "entryLegalForm": "srl",
     "priceElasticity": 2.0,
     "baseMonthlyChurn": 0.04,
-    "attractivenessExponents": { "quality": 0.3, "brand": 0.1, "location": 0 },
+    "attractivenessExponents": {
+      "quality": 0.3,
+      "brand": 0.1,
+      "location": 0
+    },
     "valuationMultiple": 6,
-    "inputShares": { "energy": 0.2, "manufacturing": 0.05, "logistics": 0.15, "technology": 0.05 }
+    "inputShares": {
+      "energy": 0.2,
+      "manufacturing": 0.05,
+      "logistics": 0.15,
+      "technology": 0.05
+    },
+    "economics": {
+      "basePrice": 20,
+      "laborShare": 0.4,
+      "npcWageMonthly": 2000,
+      "baseRentMonthly": 1200,
+      "npcDemandFloorWeekly": 3000,
+      "interestRateSensitivity": 1.0,
+      "customers": "business"
+    }
   },
   "manufacturing": {
     "entryLegalForm": "srl",
     "priceElasticity": 1.2,
     "baseMonthlyChurn": 0.03,
-    "attractivenessExponents": { "quality": 0.8, "brand": 0.4, "location": 0 },
+    "attractivenessExponents": {
+      "quality": 0.8,
+      "brand": 0.4,
+      "location": 0
+    },
     "valuationMultiple": 8,
-    "inputShares": { "energy": 0.15, "raw_materials": 0.4, "logistics": 0.1, "technology": 0.05 }
+    "inputShares": {
+      "energy": 0.15,
+      "raw_materials": 0.4,
+      "logistics": 0.1,
+      "technology": 0.05
+    },
+    "economics": {
+      "basePrice": 50,
+      "laborShare": 0.2,
+      "npcWageMonthly": 2300,
+      "baseRentMonthly": 2500,
+      "npcDemandFloorWeekly": 2000,
+      "interestRateSensitivity": 1.5,
+      "customers": "business"
+    }
   },
   "construction": {
     "entryLegalForm": "srl",
     "priceElasticity": 1.0,
     "baseMonthlyChurn": null,
-    "attractivenessExponents": { "quality": 0.7, "brand": 0.4, "location": 0 },
+    "attractivenessExponents": {
+      "quality": 0.7,
+      "brand": 0.4,
+      "location": 0
+    },
     "valuationMultiple": 7,
     "inputShares": {
       "energy": 0.05,
@@ -40,46 +93,140 @@
       "manufacturing": 0.25,
       "logistics": 0.1,
       "technology": 0.05
+    },
+    "economics": {
+      "basePrice": 200,
+      "laborShare": 0.2,
+      "npcWageMonthly": 2400,
+      "baseRentMonthly": 1500,
+      "npcDemandFloorWeekly": 1000,
+      "interestRateSensitivity": 4.0,
+      "customers": "business"
     }
   },
   "logistics": {
     "entryLegalForm": "sole_proprietorship",
     "priceElasticity": 1.5,
     "baseMonthlyChurn": 0.03,
-    "attractivenessExponents": { "quality": 0.6, "brand": 0.2, "location": 0 },
+    "attractivenessExponents": {
+      "quality": 0.6,
+      "brand": 0.2,
+      "location": 0
+    },
     "valuationMultiple": 7,
-    "inputShares": { "energy": 0.25, "manufacturing": 0.05, "technology": 0.1 }
+    "inputShares": {
+      "energy": 0.25,
+      "manufacturing": 0.05,
+      "technology": 0.1
+    },
+    "economics": {
+      "basePrice": 10,
+      "laborShare": 0.45,
+      "npcWageMonthly": 2100,
+      "baseRentMonthly": 1500,
+      "npcDemandFloorWeekly": 6000,
+      "interestRateSensitivity": 1.0,
+      "customers": "business"
+    }
   },
   "technology": {
     "entryLegalForm": "sole_proprietorship",
     "priceElasticity": 0.8,
     "baseMonthlyChurn": 0.06,
-    "attractivenessExponents": { "quality": 1.0, "brand": 0.6, "location": 0 },
+    "attractivenessExponents": {
+      "quality": 1.0,
+      "brand": 0.6,
+      "location": 0
+    },
     "valuationMultiple": 15,
-    "inputShares": { "energy": 0.1, "manufacturing": 0.05 }
+    "inputShares": {
+      "energy": 0.1,
+      "manufacturing": 0.05
+    },
+    "economics": {
+      "basePrice": 40,
+      "laborShare": 0.6,
+      "npcWageMonthly": 3200,
+      "baseRentMonthly": 1500,
+      "npcDemandFloorWeekly": 2500,
+      "interestRateSensitivity": 1.0,
+      "customers": "mixed"
+    }
   },
   "retail": {
     "entryLegalForm": "sole_proprietorship",
     "priceElasticity": 1.6,
     "baseMonthlyChurn": 0.05,
-    "attractivenessExponents": { "quality": 0.5, "brand": 0.6, "location": 0.8 },
+    "attractivenessExponents": {
+      "quality": 0.5,
+      "brand": 0.6,
+      "location": 0.8
+    },
     "valuationMultiple": 8,
-    "inputShares": { "energy": 0.05, "manufacturing": 0.5, "logistics": 0.15, "technology": 0.05 }
+    "inputShares": {
+      "energy": 0.05,
+      "manufacturing": 0.5,
+      "logistics": 0.15,
+      "technology": 0.05
+    },
+    "economics": {
+      "basePrice": 30,
+      "laborShare": 0.15,
+      "npcWageMonthly": 1900,
+      "baseRentMonthly": 1800,
+      "npcDemandFloorWeekly": 12000,
+      "interestRateSensitivity": 1.0,
+      "customers": "consumer"
+    }
   },
   "food_service": {
     "entryLegalForm": "sole_proprietorship",
     "priceElasticity": 1.0,
     "baseMonthlyChurn": 0.07,
-    "attractivenessExponents": { "quality": 0.9, "brand": 0.4, "location": 0.9 },
+    "attractivenessExponents": {
+      "quality": 0.9,
+      "brand": 0.4,
+      "location": 0.9
+    },
     "valuationMultiple": 7,
-    "inputShares": { "energy": 0.1, "raw_materials": 0.35, "logistics": 0.05, "technology": 0.05 }
+    "inputShares": {
+      "energy": 0.1,
+      "raw_materials": 0.35,
+      "logistics": 0.05,
+      "technology": 0.05
+    },
+    "economics": {
+      "basePrice": 15,
+      "laborShare": 0.35,
+      "npcWageMonthly": 1800,
+      "baseRentMonthly": 1200,
+      "npcDemandFloorWeekly": 20000,
+      "interestRateSensitivity": 0.8,
+      "customers": "consumer"
+    }
   },
   "finance": {
     "entryLegalForm": "spa_with_license",
     "priceElasticity": 0.7,
     "baseMonthlyChurn": 0.02,
-    "attractivenessExponents": { "quality": 0.4, "brand": 0.5, "location": 0.2 },
+    "attractivenessExponents": {
+      "quality": 0.4,
+      "brand": 0.5,
+      "location": 0.2
+    },
     "valuationMultiple": 10,
-    "inputShares": { "energy": 0.03, "technology": 0.15 }
+    "inputShares": {
+      "energy": 0.03,
+      "technology": 0.15
+    },
+    "economics": {
+      "basePrice": 20,
+      "laborShare": 0.5,
+      "npcWageMonthly": 3000,
+      "baseRentMonthly": 2000,
+      "npcDemandFloorWeekly": 2500,
+      "interestRateSensitivity": 2.0,
+      "customers": "mixed"
+    }
   }
 }

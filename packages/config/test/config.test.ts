@@ -56,7 +56,23 @@ describe('configurazione di bilanciamento', () => {
     const raw = rawConfig();
     const sectors = raw.sectors as { retail: { inputShares: Record<string, number> } };
     sectors.retail.inputShares.manufacturing = 0.9;
-    expect(() => parseBalanceConfig(raw)).toThrow(/somma degli input/);
+    expect(() => parseBalanceConfig(raw)).toThrow(/somma degli input e del lavoro/);
+  });
+
+  it('rifiuta un paniere che non somma a 1', () => {
+    const raw = rawConfig();
+    const economy = raw.economy as { lifestyle: { housingShare: number } };
+    economy.lifestyle.housingShare = 0.5;
+    expect(() => parseBalanceConfig(raw)).toThrow(/paniere/);
+  });
+
+  it('rifiuta scaglioni fiscali non crescenti', () => {
+    const raw = rawConfig();
+    const economy = raw.economy as {
+      taxes: { personalBrackets: [unknown, { upTo: number | null }] };
+    };
+    economy.taxes.personalBrackets[1].upTo = 1000;
+    expect(() => parseBalanceConfig(raw)).toThrow(/crescenti/);
   });
 
   it('rifiuta una classe con patrimonio iniziale diverso', () => {

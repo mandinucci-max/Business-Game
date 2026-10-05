@@ -1,0 +1,160 @@
+{
+  "market": {
+    "weeklySearchRate": 0.25,
+    "operatorQuality": 0.8,
+    "operatorBrand": 1.0,
+    "newCompanyBrand": 0.2,
+    "minimumVisibility": 0.05,
+    "referralStrength": 2.0,
+    "maxWeeklyChurn": 0.5,
+    "projectMonthlyTurnover": 0.2,
+    "serviceExponent": 0.3,
+    "reputationExponent": 0.3,
+    "reputationWeeklySmoothing": 0.1,
+    "marketingReferenceShare": 0.01,
+    "rndReferenceShare": 0.02,
+    "rndMonthlyDecay": 0.03,
+    "rndQualityWeight": 0.5,
+    "inputQualityExponent": 0.3,
+    "baseQuality": 0.8,
+    "serviceReferenceShare": 0.005,
+    "serviceMaxBonus": 0.4,
+    "locationSpread": 0.15,
+    "overheadBase": 0.05,
+    "overheadReferenceWorkers": 20,
+    "maxOverhead": 0.5,
+    "rentPerWorkerFactor": 0.1
+  },
+  "labour": {
+    "startingUnemployment": 0.06,
+    "moraleWageExponent": 0.5,
+    "moraleMin": 0.6,
+    "moraleMax": 1.2,
+    "trainingMaxBonus": 0.1,
+    "trainingReferencePerWorkerWeekly": 25,
+    "lowMoraleWeeklyQuitRate": 0.05,
+    "maxWorkersByLegalForm": {
+      "sole_proprietorship": 5,
+      "srl": 50,
+      "spa": 10000,
+      "spa_with_license": 10000
+    }
+  },
+  "demand": {
+    "payrollMultiplierMin": 0.9,
+    "payrollMultiplierMax": 1.2,
+    "payrollReferenceMonthly": 500000,
+    "minimumDemandMultiplier": 0.5
+  },
+  "macro": {
+    "inflationTarget": 0.02,
+    "unemploymentTarget": 0.05,
+    "neutralRate": 0.02,
+    "inflationWeight": 1.5,
+    "unemploymentWeight": 0.5,
+    "minRate": 0,
+    "maxRate": 0.1,
+    "maxMonthlyRateStep": 0.0025,
+    "stabilizerStep": 0.01,
+    "stabilizerMin": 0.8,
+    "stabilizerMax": 1.2,
+    "stabilizerTolerance": 0.01,
+    "monthlyEventProbability": 0.6
+  },
+  "events": [
+    {
+      "id": "energy_crisis",
+      "durationMonths": { "min": 3, "max": 9 },
+      "effects": [
+        { "sector": "energy", "operatorPrice": 1.3 },
+        { "sector": "all", "demand": 0.97 }
+      ]
+    },
+    {
+      "id": "bad_harvest",
+      "durationMonths": { "min": 3, "max": 6 },
+      "effects": [
+        { "sector": "raw_materials", "operatorPrice": 1.25 },
+        { "sector": "food_service", "demand": 0.97 }
+      ]
+    },
+    {
+      "id": "tech_boom",
+      "durationMonths": { "min": 6, "max": 12 },
+      "effects": [{ "sector": "technology", "demand": 1.25 }]
+    },
+    {
+      "id": "construction_boom",
+      "durationMonths": { "min": 6, "max": 12 },
+      "effects": [
+        { "sector": "construction", "demand": 1.25 },
+        { "sector": "raw_materials", "demand": 1.1 }
+      ]
+    },
+    {
+      "id": "recession",
+      "durationMonths": { "min": 6, "max": 12 },
+      "effects": [{ "sector": "all", "demand": 0.9 }]
+    },
+    {
+      "id": "expansion",
+      "durationMonths": { "min": 6, "max": 12 },
+      "effects": [{ "sector": "all", "demand": 1.08 }]
+    },
+    {
+      "id": "tourism_season",
+      "durationMonths": { "min": 3, "max": 4 },
+      "effects": [
+        { "sector": "food_service", "demand": 1.15 },
+        { "sector": "retail", "demand": 1.05 }
+      ]
+    }
+  ],
+  "bank": {
+    "spreads": {
+      "AAA": 0.01,
+      "AA": 0.015,
+      "A": 0.02,
+      "BBB": 0.03,
+      "BB": 0.045,
+      "B": 0.065,
+      "CCC": 0.1,
+      "D": null
+    },
+    "depositSpreadBelowPolicy": 0.01,
+    "maxDebtServiceRatio": 0.4,
+    "maxLoanTermMonths": 120,
+    "arrearsGraceTicks": 4
+  },
+  "taxes": {
+    "personalBrackets": [
+      { "upTo": 2000, "rate": 0.15 },
+      { "upTo": 6000, "rate": 0.28 },
+      { "upTo": null, "rate": 0.4 }
+    ],
+    "corporate": 0.22,
+    "capital": 0.2
+  },
+  "lifestyle": {
+    "monthlyCostByLevel": [1200, 2000, 3500, 6000, 10000],
+    "basketShares": {
+      "food_service": 0.35,
+      "retail": 0.25,
+      "energy": 0.1,
+      "technology": 0.03,
+      "finance": 0.02
+    },
+    "housingShare": 0.25
+  },
+  "indexFund": {
+    "equityPremium": 0.04,
+    "monthlyVolatility": 0.04
+  },
+  "npcIncome": {
+    "freelancerMonthlyVolatility": 0.25
+  },
+  "start": {
+    "entrepreneurStartingWorkers": 2,
+    "startingPriceMarkup": 1.15
+  }
+}

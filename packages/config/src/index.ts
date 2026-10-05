@@ -1,4 +1,5 @@
 import classes from '../balance/classes.json' with { type: 'json' };
+import economy from '../balance/economy.json' with { type: 'json' };
 import global from '../balance/global.json' with { type: 'json' };
 import healthTargets from '../balance/health-targets.json' with { type: 'json' };
 import sectors from '../balance/sectors.json' with { type: 'json' };
@@ -32,7 +33,7 @@ export function parseBalanceConfig(raw: unknown): BalanceConfig {
 
 /** Configurazione di bilanciamento versionata nel repository (GDD, Appendice A). */
 export function loadBalanceConfig(): BalanceConfig {
-  return parseBalanceConfig({ sectors, global, classes, healthTargets });
+  return parseBalanceConfig({ sectors, global, classes, economy, healthTargets });
 }
 
 function deepFreeze<T>(value: T): T {
