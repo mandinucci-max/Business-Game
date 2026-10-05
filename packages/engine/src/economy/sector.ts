@@ -2,12 +2,23 @@ import { type BalanceConfig, SECTOR_IDS, type SectorId } from '@business-game/co
 import type { CityState, Company } from '../state';
 import type { MarketParams } from './market';
 
-/** Prezzo dell'operatore cittadino: prezzo base + ricarico, modificato dagli eventi. */
+/**
+ * Prezzo dell'operatore cittadino: prezzo base + ricarico, indicizzato ai costi e modificato
+ * dagli eventi, sia diretti sia sui suoi input (gli shock si trasmettono lungo la filiera).
+ */
 export function operatorPrice(state: CityState, config: BalanceConfig, sector: SectorId): number {
+  let inputShock = 1;
+  for (const [input, share] of Object.entries(config.sectors[sector].inputShares) as [
+    SectorId,
+    number,
+  ][]) {
+    inputShock += share * (state.markets[input].operatorPriceMultiplier - 1);
+  }
   return (
     config.sectors[sector].economics.basePrice *
     (1 + config.global.npc.cityOperatorMarkup) *
     state.markets[sector].operatorPriceMultiplier *
+    inputShock *
     state.macro.costIndex
   );
 }

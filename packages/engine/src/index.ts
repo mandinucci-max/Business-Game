@@ -17,3 +17,4 @@ export {
   fundAccount,
   companyAccount,
 } from './economy/setup';
+export * from './economy/valuation';

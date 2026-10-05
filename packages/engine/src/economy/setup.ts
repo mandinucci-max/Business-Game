@@ -141,6 +141,10 @@ export function foundCompany(
     profitHistory: [],
     lossCarryForward: ZERO,
   };
+  // Una ditta nuova parte con una piccola clientela pari alla sua capacità, sottratta
+  // all'operatore cittadino: i suoi dipendenti vengono dal lavoro che l'operatore perde
+  // (l'occupazione si ricalcola alla chiusura mensile).
+  company.customers = company.capacity;
   openAccount(state.ledger, company.account);
   state.companies[id] = company;
   state.players[params.ownerId]?.companyIds.push(id);

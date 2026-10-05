@@ -44,27 +44,29 @@
   },
   "demand": {
     "payrollMultiplierMin": 1.0,
-    "payrollMultiplierMax": 1.2,
-    "payrollReferenceMonthly": 500000,
+    "payrollMultiplierMax": 1.05,
+    "payrollReferenceMonthly": 1500000,
     "minimumDemandMultiplier": 0.5
   },
   "macro": {
     "inflationTarget": 0.02,
-    "unemploymentTarget": 0.05,
+    "unemploymentTarget": 0.06,
     "neutralRate": 0.02,
     "inflationWeight": 1.5,
     "unemploymentWeight": 0.5,
     "minRate": 0,
     "maxRate": 0.1,
     "maxMonthlyRateStep": 0.0025,
-    "stabilizerStep": 0.01,
-    "stabilizerMin": 0.8,
-    "stabilizerMax": 1.2,
+    "stabilizerStep": 0.005,
+    "stabilizerMin": 0.9,
+    "stabilizerMax": 1.1,
     "stabilizerTolerance": 0.01,
     "monthlyEventProbability": 0.25,
     "phillipsSlope": 0.5,
     "maxAnnualCostInflation": 0.1,
-    "minAnnualCostInflation": -0.02
+    "minAnnualCostInflation": -0.02,
+    "migrationSensitivity": 0.2,
+    "maxMonthlyMigration": 0.01
   },
   "events": [
     {

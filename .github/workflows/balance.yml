@@ -1,0 +1,36 @@
+name: Bilanciamento
+
+# Monte Carlo notturno (piano §6): gioca molte stagioni con i bot e verifica gli obiettivi di salute.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: Numero di stagioni da simulare
+        default: '50'
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run sim -- --seasons "${SEASONS}" --out "${GITHUB_WORKSPACE}/balance-report.md"
+        env:
+          SEASONS: ${{ github.event.inputs.seasons || '50' }}
+      - if: always()
+        run: cat balance-report.md >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balance-report
+          path: balance-report.md

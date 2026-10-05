@@ -197,6 +197,16 @@ export function centralBank(ctx: TickContext): void {
   macro.employment = operatorEmployment + companyEmployment;
   macro.unemployment = Math.max(0, 1 - macro.employment / macro.laborForce);
 
+  // Una città con poca disoccupazione attira lavoratori, una con troppa li perde.
+  const migration = Math.max(
+    -policy.maxMonthlyMigration,
+    Math.min(
+      policy.maxMonthlyMigration,
+      policy.migrationSensitivity * (policy.unemploymentTarget - macro.unemployment),
+    ),
+  );
+  macro.laborForce *= 1 + migration;
+
   macro.cpiHistory = [...macro.cpiHistory, consumerPriceIndex(ctx)];
   macro.inflation = annualInflation(macro.cpiHistory);
 
@@ -210,9 +220,13 @@ export function centralBank(ctx: TickContext): void {
   );
   macro.policyRate = Math.max(policy.minRate, Math.min(policy.maxRate, macro.policyRate + step));
 
-  if (macro.inflation > policy.inflationTarget + policy.stabilizerTolerance) {
+  // Lo stabilizzatore aggiunge domanda solo se c'è anche disoccupazione da assorbire,
+  // e la toglie solo se il mercato del lavoro è teso: non crea mai più domanda del lavoro disponibile.
+  const lowInflation = macro.inflation < policy.inflationTarget - policy.stabilizerTolerance;
+  const highInflation = macro.inflation > policy.inflationTarget + policy.stabilizerTolerance;
+  if (highInflation && macro.unemployment < policy.unemploymentTarget) {
     macro.demandStabilizer -= policy.stabilizerStep;
-  } else if (macro.inflation < policy.inflationTarget - policy.stabilizerTolerance) {
+  } else if (lowInflation && macro.unemployment > policy.unemploymentTarget) {
     macro.demandStabilizer += policy.stabilizerStep;
   }
   macro.demandStabilizer = Math.max(

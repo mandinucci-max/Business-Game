@@ -1,0 +1,16 @@
+{
+  "name": "@business-game/sim",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "sim": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@business-game/config": "0.0.0",
+    "@business-game/engine": "0.0.0"
+  }
+}

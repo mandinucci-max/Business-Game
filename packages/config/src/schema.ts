@@ -227,6 +227,9 @@ const economySchema = z.strictObject({
     phillipsSlope: z.number().min(0),
     maxAnnualCostInflation: z.number(),
     minAnnualCostInflation: z.number(),
+    /** Migrazione: la forza lavoro cresce se la disoccupazione è sotto l'obiettivo e cala se è sopra. */
+    migrationSensitivity: z.number().min(0),
+    maxMonthlyMigration: share,
   }),
   events: z.array(eventSchema),
   bank: z.strictObject({

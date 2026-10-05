@@ -20,7 +20,7 @@
       "laborShare": 0.15,
       "npcWageMonthly": 2600,
       "baseRentMonthly": 1500,
-      "npcDemandFloorWeekly": 15000,
+      "npcDemandFloorWeekly": 45000,
       "interestRateSensitivity": 0.5,
       "customers": "mixed"
     }
@@ -46,7 +46,7 @@
       "laborShare": 0.4,
       "npcWageMonthly": 2000,
       "baseRentMonthly": 1200,
-      "npcDemandFloorWeekly": 3000,
+      "npcDemandFloorWeekly": 9000,
       "interestRateSensitivity": 1.0,
       "customers": "business"
     }
@@ -72,7 +72,7 @@
       "laborShare": 0.2,
       "npcWageMonthly": 2300,
       "baseRentMonthly": 2500,
-      "npcDemandFloorWeekly": 2000,
+      "npcDemandFloorWeekly": 6000,
       "interestRateSensitivity": 1.5,
       "customers": "business"
     }
@@ -99,7 +99,7 @@
       "laborShare": 0.2,
       "npcWageMonthly": 2400,
       "baseRentMonthly": 1500,
-      "npcDemandFloorWeekly": 1000,
+      "npcDemandFloorWeekly": 3000,
       "interestRateSensitivity": 4.0,
       "customers": "business"
     }
@@ -124,7 +124,7 @@
       "laborShare": 0.45,
       "npcWageMonthly": 2100,
       "baseRentMonthly": 1500,
-      "npcDemandFloorWeekly": 6000,
+      "npcDemandFloorWeekly": 18000,
       "interestRateSensitivity": 1.0,
       "customers": "business"
     }
@@ -148,7 +148,7 @@
       "laborShare": 0.6,
       "npcWageMonthly": 3200,
       "baseRentMonthly": 1500,
-      "npcDemandFloorWeekly": 2500,
+      "npcDemandFloorWeekly": 7500,
       "interestRateSensitivity": 1.0,
       "customers": "mixed"
     }
@@ -174,7 +174,7 @@
       "laborShare": 0.15,
       "npcWageMonthly": 1900,
       "baseRentMonthly": 1800,
-      "npcDemandFloorWeekly": 12000,
+      "npcDemandFloorWeekly": 36000,
       "interestRateSensitivity": 1.0,
       "customers": "consumer"
     }
@@ -200,7 +200,7 @@
       "laborShare": 0.35,
       "npcWageMonthly": 1800,
       "baseRentMonthly": 1200,
-      "npcDemandFloorWeekly": 20000,
+      "npcDemandFloorWeekly": 60000,
       "interestRateSensitivity": 0.8,
       "customers": "consumer"
     }
@@ -224,7 +224,7 @@
       "laborShare": 0.5,
       "npcWageMonthly": 3000,
       "baseRentMonthly": 2000,
-      "npcDemandFloorWeekly": 2500,
+      "npcDemandFloorWeekly": 7500,
       "interestRateSensitivity": 2.0,
       "customers": "mixed"
     }
