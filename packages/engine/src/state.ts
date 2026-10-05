@@ -5,11 +5,12 @@ import {
   type LegalForm,
   SECTOR_IDS,
   type SectorId,
+  type SkillId,
 } from '@business-game/config';
 import { type AccountId, type LedgerState, createLedger, openAccount } from './ledger';
 import { type Amount, ZERO } from './money';
 
-export const STATE_SCHEMA_VERSION = 2;
+export const STATE_SCHEMA_VERSION = 3;
 
 export type PlayerId = string;
 export type CompanyId = string;
@@ -24,18 +25,56 @@ export interface Debtor {
   arrearsSinceTick: number | null;
 }
 
+/** Lavoro presso un datore gestito dal computer, con la sua carriera (GDD §5.2). */
+export interface NpcJob {
+  hours: number;
+  /** Indice del livello di carriera (0 = junior). */
+  careerLevel: number;
+  monthsInJob: number;
+}
+
+/** Attività da libero professionista con clienti gestiti dal computer (GDD §5.2). */
+export interface FreelancePractice {
+  hours: number;
+  monthsActive: number;
+  collaborators: number;
+  /** Ore ancora da dedicare allo sviluppo del prodotto; null se non avviato. */
+  productHoursLeft: number | null;
+  /** Royalty mensili del prodotto, 0 finché non è pronto. */
+  royaltyMonthly: number;
+}
+
+export type TraitId = 'successful_founder' | 'scaler' | 'lesson_learned' | 'loyal_clients';
+
 export interface Player extends Debtor {
   id: PlayerId;
+  /** Classe d'origine, scelta all'ingresso e permanente (GDD §4). */
   classId: ClassId;
+  /** Classi attive: l'origine più quelle sbloccate (GDD §5.4). */
+  activeClasses: ClassId[];
+  /** Ruolo del dipendente o professione del libero professionista. */
+  role: string | null;
+  /** Esperienza accumulata per competenza. */
+  skills: Record<SkillId, number>;
+  wellbeing: number;
+  reputation: number;
+  /** Contratti conclusi con altri giocatori (prestiti, affitti). */
+  network: number;
+  /** Tratti con il loro grado (1–3). */
+  traits: Partial<Record<TraitId, number>>;
+  /** Studio pianificato per il mese. */
+  study: { skill: SkillId | null; hours: number };
+  /** Il mese successivo a un burnout le ore disponibili si dimezzano. */
+  burnout: boolean;
   /** Conto delle quote del fondo indice gestito dal computer. */
   fundAccount: AccountId;
   joinedTick: number;
   /** Livello di vita da 1 a 5 (GDD §7.1). */
   lifestyleLevel: number;
-  /** Lavoro presso un'azienda gestita dal computer (GDD §4.1). */
-  npcJobMonthlyWage: Amount;
-  /** Reddito atteso dai clienti gestiti dal computer (liberi professionisti). */
-  freelanceMonthlyIncome: Amount;
+  npcJob: NpcJob | null;
+  freelance: FreelancePractice | null;
+  /** Unità immobiliari possedute (GDD §6.2). */
+  properties: { residential: number; commercial: number };
   creditRating: CreditRating;
   companyIds: CompanyId[];
   /** Redditi del mese in corso, per tasse e rating. */
@@ -97,6 +136,10 @@ export interface Company extends Debtor {
 export interface Loan {
   id: LoanId;
   borrower: { kind: 'player' | 'company'; id: string };
+  /** Giocatore che ha prestato il denaro; assente se il prestito è della banca (GDD §12.2). */
+  lenderId?: PlayerId;
+  /** Mesi consecutivi con rate non pagate (prestiti tra giocatori). */
+  monthsInDefault?: number;
   principal: Amount;
   annualRate: number;
   remainingMonths: number;
@@ -160,7 +203,18 @@ export interface CityState {
   loans: Record<LoanId, Loan>;
   markets: Record<SectorId, SectorMarket>;
   macro: Macro;
-  counters: { company: number; loan: number };
+  counters: { company: number; loan: number; offer: number };
+  /** Offerte di prestito pubblicate dagli investitori (GDD §12.2). */
+  loanOffers: Record<string, LoanOffer>;
+}
+
+export interface LoanOffer {
+  id: string;
+  lenderId: PlayerId;
+  /** Capitale ancora disponibile da prestare. */
+  available: Amount;
+  annualRate: number;
+  months: number;
 }
 
 export function createCityState(params: {
@@ -196,6 +250,8 @@ export function createCityState(params: {
   for (const sector of SECTOR_IDS) {
     openAccount(ledger, `market:${sector}`);
   }
+  openAccount(ledger, 'rent:residential');
+  openAccount(ledger, 'rent:commercial');
   return {
     schemaVersion: STATE_SCHEMA_VERSION,
     cityId: params.cityId,
@@ -220,7 +276,8 @@ export function createCityState(params: {
       lastIndexReturn: 0,
       costIndex: 1,
     },
-    counters: { company: 0, loan: 0 },
+    counters: { company: 0, loan: 0, offer: 0 },
+    loanOffers: {},
   };
 }
 

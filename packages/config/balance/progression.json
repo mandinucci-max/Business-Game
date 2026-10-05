@@ -1,0 +1,188 @@
+{
+  "roles": {
+    "employee": {
+      "operations": "technical",
+      "technical": "technical",
+      "sales": "commercial",
+      "administration": "accounting_tax"
+    },
+    "freelancer": {
+      "legal": "legal",
+      "tax": "accounting_tax",
+      "marketing": "commercial",
+      "engineering": "technical",
+      "finance": "finance"
+    }
+  },
+  "skills": {
+    "xpPerLevelFactor": 100,
+    "maxLevel": 10,
+    "studyXpPerHour": 1.5,
+    "studyCostPerHour": 10,
+    "practice": {
+      "npcJobMonthly": 60,
+      "freelancePerHour": 0.45,
+      "managementPerCompanyMonthly": 40,
+      "investingMonthly": 30
+    },
+    "lessonLearnedXpBonus": 0.05
+  },
+  "hours": {
+    "npcJobFullTime": 160,
+    "npcJobPartTime": 80,
+    "managementPerCompany": 40,
+    "defaultFreelanceHours": 120,
+    "overtimeWellbeingCostPerHour": 0.3
+  },
+  "wellbeing": {
+    "start": 70,
+    "lowThreshold": 40,
+    "burnoutThreshold": 20,
+    "lowProductivityPenalty": 0.1,
+    "burnoutProductivityPenalty": 0.3,
+    "restPerFreeHour": 0.1,
+    "maxMonthlyRest": 10,
+    "basketBonusByLevel": [-2, 2, 5, 8, 10]
+  },
+  "reputation": {
+    "start": 20,
+    "startByClass": {
+      "freelancer": 30
+    },
+    "monthlyDriftTo50": 0.02,
+    "promotion": 5,
+    "profitableCompanyMonth": 0.5,
+    "arrearsMonth": -5,
+    "bankruptcy": -30,
+    "loanRepaid": 2,
+    "peerLoanDefault": -10
+  },
+  "careers": {
+    "employee": [
+      {
+        "id": "junior",
+        "roleSkill": 0,
+        "management": 0,
+        "reputation": 0,
+        "months": 0,
+        "wageMultiplier": 1
+      },
+      {
+        "id": "senior",
+        "roleSkill": 4,
+        "management": 0,
+        "reputation": 0,
+        "months": 6,
+        "wageMultiplier": 1.5
+      },
+      {
+        "id": "manager",
+        "roleSkill": 6,
+        "management": 4,
+        "reputation": 40,
+        "months": 12,
+        "wageMultiplier": 2.5
+      },
+      {
+        "id": "executive",
+        "roleSkill": 7,
+        "management": 7,
+        "reputation": 60,
+        "months": 24,
+        "wageMultiplier": 4
+      }
+    ],
+    "freelancer": {
+      "baseHourlyRate": 23.3,
+      "rateGrowthPerLevel": 0.12,
+      "establishedClientMonths": 10,
+      "establishedReputation": 40,
+      "establishedRateBonus": 0.2,
+      "studioManagement": 3,
+      "maxCollaborators": 5,
+      "collaboratorMonthlyMargin": 600,
+      "productSkill": 8,
+      "productHours": 200,
+      "royaltyStartMonthly": 300,
+      "royaltyMonthlyGrowth": 0.05,
+      "royaltyCapMonthly": 2500
+    },
+    "entrepreneur": {
+      "srlCapital": 10000,
+      "srlManagement": 4,
+      "spaCapital": 100000,
+      "spaManagement": 6,
+      "spaProfitableMonths": 12,
+      "soleProprietorshipValuationMultiple": 3,
+      "capacityBonusPerManagementLevel": 0.02,
+      "brandBonusPerCommercialLevel": 0.05,
+      "soleProprietorshipCapital": 5000,
+      "financeLicenseFinance": 7,
+      "financeLicenseCapital": 500000
+    },
+    "investor": [
+      {
+        "id": "saver",
+        "finance": 0,
+        "netWorth": 0,
+        "maxPropertyUnits": 2,
+        "maxPeerLoan": 5000
+      },
+      {
+        "id": "angel",
+        "finance": 4,
+        "netWorth": 50000,
+        "maxPropertyUnits": 10,
+        "maxPeerLoan": 50000
+      },
+      {
+        "id": "venture",
+        "finance": 6,
+        "netWorth": 250000,
+        "maxPropertyUnits": 100,
+        "maxPeerLoan": 500000
+      },
+      {
+        "id": "raider",
+        "finance": 8,
+        "netWorth": 1000000,
+        "maxPropertyUnits": 1000,
+        "maxPeerLoan": 5000000
+      }
+    ]
+  },
+  "unlock": {
+    "entrepreneur": {
+      "cash": 10000,
+      "management": 3
+    },
+    "freelancer": {
+      "skill": 4,
+      "examHours": 40,
+      "examCost": 2000,
+      "reputation": 30
+    },
+    "investor": {
+      "investable": 50000,
+      "finance": 3
+    }
+  },
+  "traits": {
+    "maxActive": 5,
+    "gradeEffects": [0.03, 0.06, 0.1]
+  },
+  "peerLending": {
+    "maxMonthsInDefault": 3,
+    "minAnnualRate": 0,
+    "maxAnnualRate": 0.3,
+    "maxOpenOffers": 5
+  },
+  "realEstate": {
+    "residentialUnitRentMonthly": 300,
+    "commercialUnitRentMonthly": 1200,
+    "baseCapRate": 0.06,
+    "capRateRateSensitivity": 0.5,
+    "transactionFee": 0.03,
+    "maintenanceShare": 0.1
+  }
+}

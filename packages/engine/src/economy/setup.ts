@@ -4,6 +4,7 @@ import {
   type CreditRating,
   type LegalForm,
   type SectorId,
+  type SkillId,
 } from '@business-game/config';
 import { openAccount } from '../ledger';
 import { ZERO, credits } from '../money';
@@ -11,6 +12,7 @@ import type { Rng } from '../rng';
 import { type CityState, type Company, type Player, unitsPerNpcWorkerWeek } from '../state';
 import type { TickContext } from '../tick';
 import { quality } from './market';
+import { emptySkills, roleSkillOf, traitEffect, xpForLevel } from './progression';
 import { receiveFromOutside } from './settle';
 
 export const playerAccount = (id: string) => `player:${id}`;
@@ -23,10 +25,11 @@ export const companyAccount = (id: string) => `company:${id}`;
  */
 export function joinPlayer(
   ctx: TickContext,
-  params: { playerId: string; classId: ClassId; sector?: SectorId },
+  params: { playerId: string; classId: ClassId; sector?: SectorId; role?: string },
 ): Player {
   const { state, config } = ctx;
   const start = config.classes.classes[params.classId];
+  const progression = config.progression;
   const player: Player = {
     id: params.playerId,
     classId: params.classId,
@@ -35,10 +38,31 @@ export function joinPlayer(
     arrears: ZERO,
     arrearsSinceTick: null,
     joinedTick: ctx.date.tick,
+    activeClasses: [params.classId],
+    role: params.role ?? null,
+    skills: emptySkills(),
+    wellbeing: progression.wellbeing.start,
+    reputation: progression.reputation.startByClass[params.classId] ?? progression.reputation.start,
+    network: 0,
+    traits: {},
+    study: { skill: null, hours: 0 },
+    burnout: false,
     lifestyleLevel: 1,
-    npcJobMonthlyWage: params.classId === 'employee' ? credits(start.monthlyIncome.min) : ZERO,
-    freelanceMonthlyIncome:
-      params.classId === 'freelancer' ? credits(start.monthlyIncome.min) : ZERO,
+    npcJob:
+      params.classId === 'employee'
+        ? { hours: progression.hours.npcJobFullTime, careerLevel: 0, monthsInJob: 0 }
+        : null,
+    freelance:
+      params.classId === 'freelancer'
+        ? {
+            hours: progression.hours.defaultFreelanceHours,
+            monthsActive: 0,
+            collaborators: 0,
+            productHoursLeft: null,
+            royaltyMonthly: 0,
+          }
+        : null,
+    properties: { residential: 0, commercial: 0 },
     creditRating: start.creditRating,
     companyIds: [],
     month: { earnedIncome: ZERO, capitalIncome: ZERO, debtService: ZERO },
@@ -47,6 +71,14 @@ export function joinPlayer(
     lastBankruptcyTick: null,
     benefitMonthsLeft: 0,
   };
+  // Competenze di partenza (GDD §4.1): quelle fisse della classe e quella del ruolo scelto.
+  for (const [skill, level] of Object.entries(start.fixedSkills) as [SkillId, number][]) {
+    player.skills[skill] = xpForLevel(config, level);
+  }
+  const roleSkill = roleSkillOf(config, player);
+  if (roleSkill !== null && start.chosenSkillLevel !== null) {
+    player.skills[roleSkill] = xpForLevel(config, start.chosenSkillLevel);
+  }
   openAccount(state.ledger, player.account);
   openAccount(state.ledger, player.fundAccount);
   state.players[player.id] = player;
@@ -115,7 +147,7 @@ export function foundCompany(
     npcWorkers: workers,
     wage: credits(economics.npcWageMonthly),
     location,
-    brand: market.newCompanyBrand,
+    brand: market.newCompanyBrand + newCompanyBrandBonus(state, config, params.ownerId),
     rndStock: 0,
     reputation: 1,
     quality: quality({
@@ -151,6 +183,12 @@ export function foundCompany(
   return company;
 }
 
+/** Il tratto "Fondatore di successo" porta parte del brand nelle nuove aziende (GDD §5.3). */
+function newCompanyBrandBonus(state: CityState, config: BalanceConfig, ownerId: string): number {
+  const owner = state.players[ownerId];
+  return owner === undefined ? 0 : 3 * traitEffect(config, owner, 'successful_founder');
+}
+
 export function addLoan(
   state: CityState,
   params: {
@@ -160,6 +198,7 @@ export function addLoan(
     months: number;
     repayment: 'amortizing' | 'bullet';
     purpose: string;
+    lenderId?: string;
   },
 ): string {
   state.counters.loan += 1;
@@ -172,6 +211,7 @@ export function addLoan(
     remainingMonths: params.months,
     repayment: params.repayment,
     purpose: params.purpose,
+    ...(params.lenderId === undefined ? {} : { lenderId: params.lenderId, monthsInDefault: 0 }),
   };
   return id;
 }

@@ -26,6 +26,8 @@ import {
 } from './sector';
 import { type Payment, receiveFromOutside, repayArrears, settle } from './settle';
 import { bankruptCompany, bankruptPlayer } from './insolvency';
+import { ownerBonuses } from './progression';
+import { distributeRents, payRent, rentalMarket } from './realEstate';
 
 /** Moltiplicatori di domanda e prezzi dell'operatore per settore (GDD §7.4, §13). */
 export function updateMarketConditions(ctx: TickContext): void {
@@ -108,19 +110,22 @@ export function updateCapacity(ctx: TickContext): void {
             -toCredits(company.budget.training) /
               (Math.max(1, workers) * labour.trainingReferencePerWorkerWeekly),
           ));
+    const bonus = ownerBonuses(state, config, company);
     company.capacity =
       workers *
       unitsPerNpcWorkerWeek(config, company.sector) *
       company.morale *
       training *
+      bonus.capacity *
       (1 -
-        overhead(
-          workers,
-          market.overheadBase,
-          market.overheadReferenceWorkers,
-          config.global.market.overheadExponent,
-          market.maxOverhead,
-        ));
+        bonus.overhead *
+          overhead(
+            workers,
+            market.overheadBase,
+            market.overheadReferenceWorkers,
+            config.global.market.overheadExponent,
+            market.maxOverhead,
+          ));
   }
 }
 
@@ -161,6 +166,7 @@ export function runMarkets(ctx: TickContext): void {
   const lifestyle = config.economy.lifestyle;
 
   const buyers = new Map<SectorId, Buyer[]>(SECTOR_IDS.map((s) => [s, []]));
+  const housing = rentalMarket(state, config, 'residential');
   for (const sector of SECTOR_IDS) {
     const floor =
       config.sectors[sector].economics.npcDemandFloorWeekly *
@@ -183,13 +189,16 @@ export function runMarkets(ctx: TickContext): void {
         (config.sectors[sector].economics.basePrice * (1 + config.global.npc.cityOperatorMarkup));
       if (units > 0) buyers.get(sector)?.push({ kind: 'player', entity: player, units });
     }
-    settle(
+    payRent(
       ctx,
       player,
-      [{ to: SINK_ACCOUNT, amount: credits(weekly * lifestyle.housingShare) }],
+      credits(weekly * lifestyle.housingShare),
+      'residential',
+      housing.playerShare,
       'basket:housing',
     );
   }
+  distributeRents(ctx, 'residential');
   for (const company of activeCompanies(state)) {
     if (company.lastOutput <= 0) continue;
     for (const input of inputRequirements(config, company.sector)) {
@@ -374,7 +383,7 @@ export function weeklyAccounting(ctx: TickContext): void {
     const basePrice = config.sectors[company.sector].economics.basePrice;
     company.brand = nextBrand(
       company.brand,
-      toCredits(marketing),
+      toCredits(marketing) * ownerBonuses(state, config, company).brand,
       market.marketingReferenceShare * reference,
       config.global.market.brandMonthlyDecay,
       weeksPerMonth,

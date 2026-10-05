@@ -1,5 +1,6 @@
 import { SINK_ACCOUNT, balanceOf } from '../ledger';
-import { ZERO, amount, multiply, negate } from '../money';
+import { ZERO, amount, credits, multiply, negate } from '../money';
+import { unitPrice } from './realEstate';
 import { type Company, type Loan, type Player, removeLoan } from '../state';
 import type { TickContext } from '../tick';
 import { addArrears, receiveFromOutside, repayArrears, transfer } from './settle';
@@ -81,6 +82,19 @@ export function bankruptPlayer(ctx: TickContext, player: Player): void {
   if (fund > 0) {
     transfer(ctx, player.fundAccount, player.account, amount(fund), 'bankruptcy:fund');
   }
+  // Gli immobili vengono venduti per pagare i creditori.
+  for (const kind of ['residential', 'commercial'] as const) {
+    const units = player.properties[kind];
+    if (units > 0) {
+      const proceeds = credits(
+        units *
+          unitPrice(state, ctx.config, kind) *
+          (1 - ctx.config.progression.realEstate.transactionFee),
+      );
+      receiveFromOutside(ctx, [{ to: player.account, amount: proceeds }], 'bankruptcy:property');
+      player.properties[kind] = 0;
+    }
+  }
   repayArrears(ctx, player);
   for (const loan of loansOf(state.loans, 'player', player.id)) {
     payDownLoan(ctx, player.account, loan);
@@ -109,7 +123,8 @@ export function bankruptPlayer(ctx: TickContext, player: Player): void {
   player.bankruptcies += 1;
   player.lastBankruptcyTick = ctx.date.tick;
   player.lifestyleLevel = 1;
-  if (player.npcJobMonthlyWage === 0 && player.freelanceMonthlyIncome === 0) {
+  player.reputation = Math.max(0, player.reputation + ctx.config.progression.reputation.bankruptcy);
+  if (player.npcJob === null && player.freelance === null) {
     player.benefitMonthsLeft = ctx.config.economy.labour.unemploymentBenefitMonths;
   }
   ctx.emit({ type: 'player_bankrupt', playerId: player.id });
@@ -119,17 +134,18 @@ function loansOf(loans: Record<string, Loan>, kind: 'player' | 'company', id: st
   return Object.values(loans).filter((l) => l.borrower.kind === kind && l.borrower.id === id);
 }
 
-/** Usa la liquidità disponibile per rimborsare il capitale di un prestito. */
+/** Usa la liquidità disponibile per rimborsare il capitale di un prestito (banca o giocatore). */
 function payDownLoan(ctx: TickContext, account: string, loan: Loan): void {
   const available = Math.max(0, balanceOf(ctx.state.ledger, account));
   const paid = amount(Math.min(available, loan.principal));
+  const lender = loan.lenderId === undefined ? undefined : ctx.state.players[loan.lenderId];
   if (paid > 0) {
     ctx.post({
-      kind: 'sink',
+      kind: lender === undefined ? 'sink' : 'transfer',
       reason: 'loan:liquidation',
       postings: [
         { account, amount: negate(paid) },
-        { account: SINK_ACCOUNT, amount: paid },
+        { account: lender?.account ?? SINK_ACCOUNT, amount: paid },
       ],
     });
     loan.principal = amount(loan.principal - paid);

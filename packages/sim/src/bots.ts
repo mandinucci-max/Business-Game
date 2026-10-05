@@ -71,6 +71,7 @@ export interface BotProfile {
   readonly playerId: string;
   readonly classId: ClassId;
   readonly sector?: SectorId;
+  readonly role?: string;
   readonly strategy: Strategy;
 }
 
@@ -95,6 +96,7 @@ export function decide(
     add('player.join', {
       classId: bot.classId,
       ...(bot.sector === undefined ? {} : { sector: bot.sector }),
+      ...(bot.role === undefined ? {} : { role: bot.role }),
     });
     return commands;
   }
@@ -238,8 +240,8 @@ function managePersonalFinance(
   }
 
   const hasIncome =
-    player.npcJobMonthlyWage > 0 ||
-    player.freelanceMonthlyIncome > 0 ||
+    player.npcJob !== null ||
+    player.freelance !== null ||
     companies.length > 0 ||
     player.benefitMonthsLeft > 1;
   if (!hasIncome) add('job.acceptNpc', {});

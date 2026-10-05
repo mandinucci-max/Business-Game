@@ -274,6 +274,139 @@ const economySchema = z.strictObject({
   }),
 });
 
+const level = z.int().min(0).max(10);
+
+const progressionSchema = z.strictObject({
+  /** Ruoli del dipendente e professioni del libero professionista, con la competenza collegata. */
+  roles: z.strictObject({
+    employee: z.record(z.string().min(1), z.enum(SKILL_IDS)),
+    freelancer: z.record(z.string().min(1), z.enum(SKILL_IDS)),
+  }),
+  skills: z.strictObject({
+    xpPerLevelFactor: positive,
+    maxLevel: z.int().min(1),
+    studyXpPerHour: z.number().min(0),
+    studyCostPerHour: z.number().min(0),
+    practice: z.strictObject({
+      npcJobMonthly: z.number().min(0),
+      freelancePerHour: z.number().min(0),
+      managementPerCompanyMonthly: z.number().min(0),
+      investingMonthly: z.number().min(0),
+    }),
+    lessonLearnedXpBonus: z.number().min(0),
+  }),
+  hours: z.strictObject({
+    npcJobFullTime: z.int().min(0),
+    npcJobPartTime: z.int().min(0),
+    managementPerCompany: z.int().min(0),
+    defaultFreelanceHours: z.int().min(0),
+    overtimeWellbeingCostPerHour: z.number().min(0),
+  }),
+  wellbeing: z.strictObject({
+    start: z.number().min(0).max(100),
+    lowThreshold: z.number().min(0).max(100),
+    burnoutThreshold: z.number().min(0).max(100),
+    lowProductivityPenalty: share,
+    burnoutProductivityPenalty: share,
+    restPerFreeHour: z.number().min(0),
+    maxMonthlyRest: z.number().min(0),
+    basketBonusByLevel: z.array(z.number()).length(5),
+  }),
+  reputation: z.strictObject({
+    start: z.number().min(0).max(100),
+    startByClass: z.partialRecord(z.enum(CLASS_IDS), z.number().min(0).max(100)),
+    monthlyDriftTo50: share,
+    promotion: z.number(),
+    profitableCompanyMonth: z.number(),
+    arrearsMonth: z.number(),
+    bankruptcy: z.number(),
+    loanRepaid: z.number(),
+    peerLoanDefault: z.number(),
+  }),
+  careers: z.strictObject({
+    employee: z
+      .array(
+        z.strictObject({
+          id: z.string().min(1),
+          roleSkill: level,
+          management: level,
+          reputation: z.number().min(0).max(100),
+          months: z.int().min(0),
+          wageMultiplier: positive,
+        }),
+      )
+      .min(1),
+    freelancer: z.strictObject({
+      baseHourlyRate: positive,
+      rateGrowthPerLevel: z.number().min(0),
+      establishedClientMonths: z.int().min(0),
+      establishedReputation: z.number().min(0).max(100),
+      establishedRateBonus: z.number().min(0),
+      studioManagement: level,
+      maxCollaborators: z.int().min(0),
+      collaboratorMonthlyMargin: z.number().min(0),
+      productSkill: level,
+      productHours: z.int().min(0),
+      royaltyStartMonthly: z.number().min(0),
+      royaltyMonthlyGrowth: z.number().min(0),
+      royaltyCapMonthly: z.number().min(0),
+    }),
+    entrepreneur: z.strictObject({
+      soleProprietorshipCapital: positive,
+      srlCapital: positive,
+      srlManagement: level,
+      spaCapital: positive,
+      spaManagement: level,
+      spaProfitableMonths: z.int().min(0),
+      soleProprietorshipValuationMultiple: positive,
+      /** Licenza finanziaria (GDD §5.4): Finanza minima e capitale della SPA. */
+      financeLicenseFinance: level,
+      financeLicenseCapital: positive,
+      capacityBonusPerManagementLevel: z.number().min(0),
+      brandBonusPerCommercialLevel: z.number().min(0),
+    }),
+    investor: z
+      .array(
+        z.strictObject({
+          id: z.string().min(1),
+          finance: level,
+          netWorth: z.number().min(0),
+          maxPropertyUnits: z.int().min(0),
+          maxPeerLoan: z.number().min(0),
+        }),
+      )
+      .min(1),
+  }),
+  unlock: z.strictObject({
+    entrepreneur: z.strictObject({ cash: z.number().min(0), management: level }),
+    freelancer: z.strictObject({
+      skill: level,
+      examHours: z.int().min(0),
+      examCost: z.number().min(0),
+      reputation: z.number().min(0).max(100),
+    }),
+    investor: z.strictObject({ investable: z.number().min(0), finance: level }),
+  }),
+  traits: z.strictObject({
+    maxActive: z.int().min(1),
+    gradeEffects: z.array(z.number().min(0)).length(3),
+  }),
+  peerLending: z.strictObject({
+    maxMonthsInDefault: z.int().min(1),
+    maxOpenOffers: z.int().min(1),
+    minAnnualRate: z.number().min(0),
+    maxAnnualRate: z.number().min(0),
+  }),
+  realEstate: z.strictObject({
+    residentialUnitRentMonthly: positive,
+    commercialUnitRentMonthly: positive,
+    baseCapRate: positive,
+    capRateRateSensitivity: z.number().min(0),
+    transactionFee: share,
+    maintenanceShare: share,
+  }),
+});
+
 const healthTargetsSchema = z.strictObject({
   topTenShareByOriginClass: range(share),
   annualInflation: range(z.number()),
@@ -290,6 +423,7 @@ export const balanceConfigSchema = z
     global: globalSchema,
     classes: classesSchema,
     economy: economySchema,
+    progression: progressionSchema,
     healthTargets: healthTargetsSchema,
   })
   .superRefine((config, ctx) => {
@@ -376,4 +510,5 @@ export type BalanceConfig = z.infer<typeof balanceConfigSchema>;
 export type SectorConfig = BalanceConfig['sectors'][SectorId];
 export type StartingClassConfig = BalanceConfig['classes']['classes'][ClassId];
 export type EconomyConfig = BalanceConfig['economy'];
+export type ProgressionConfig = BalanceConfig['progression'];
 export type LegalForm = (typeof LEGAL_FORMS)[number];

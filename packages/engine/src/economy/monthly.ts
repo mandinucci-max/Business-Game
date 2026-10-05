@@ -1,7 +1,7 @@
 import { SECTOR_IDS, type SectorId } from '@business-game/config';
 import { SINK_ACCOUNT, balanceOf } from '../ledger';
 import { type Amount, ZERO, add, amount, credits, multiply, negate } from '../money';
-import { type Company, type Loan, removeLoan, unitsPerNpcWorkerWeek } from '../state';
+import { type Company, type Loan, type Player, removeLoan, unitsPerNpcWorkerWeek } from '../state';
 import type { TickContext } from '../tick';
 import {
   loanInstallment,
@@ -11,6 +11,8 @@ import {
   targetRating,
 } from './finance';
 import { activeCompanies } from './sector';
+import { freelanceRate, npcJobWage, productivity } from './progression';
+import { distributeRents, payRent, rentalMarket } from './realEstate';
 import { gaussian } from './setup';
 import { receiveFromOutside, settle } from './settle';
 
@@ -34,13 +36,23 @@ export function monthlyPayments(ctx: TickContext): void {
     // Redditi da datori e clienti gestiti dal computer, indicizzati ai costi.
     const index = state.macro.costIndex;
     const earned: Amount[] = [];
-    if (player.npcJobMonthlyWage > 0) earned.push(multiply(player.npcJobMonthlyWage, index));
-    if (player.freelanceMonthlyIncome > 0) {
+    if (player.npcJob !== null) earned.push(credits(npcJobWage(state, config, player)));
+    if (player.freelance !== null) {
+      const practice = player.freelance;
       const factor = Math.max(
         0,
         1 + config.economy.npcIncome.freelancerMonthlyVolatility * gaussian(incomeRng),
       );
-      earned.push(multiply(player.freelanceMonthlyIncome, factor * index));
+      const career = config.progression.careers.freelancer;
+      const fees =
+        freelanceRate(state, config, player) * practice.hours * productivity(config, player) +
+        practice.collaborators * career.collaboratorMonthlyMargin * index;
+      earned.push(credits(fees * factor));
+      if (practice.royaltyMonthly > 0) {
+        const royalty = credits(practice.royaltyMonthly * index);
+        receiveFromOutside(ctx, [{ to: player.account, amount: royalty }], 'income:royalty');
+        player.month.capitalIncome = add(player.month.capitalIncome, royalty);
+      }
     }
     if (player.benefitMonthsLeft > 0) {
       const base = config.classes.classes.employee.monthlyIncome.min;
@@ -76,6 +88,7 @@ export function monthlyPayments(ctx: TickContext): void {
     player.month.capitalIncome = add(player.month.capitalIncome, fundChange);
   }
 
+  const offices = rentalMarket(state, config, 'commercial');
   for (const company of activeCompanies(state)) {
     const economics = config.sectors[company.sector].economics;
     const wages = multiply(company.wage, company.npcWorkers);
@@ -84,10 +97,12 @@ export function monthlyPayments(ctx: TickContext): void {
         state.macro.costIndex *
         (1 + config.economy.market.rentPerWorkerFactor * company.npcWorkers),
     );
-    settle(ctx, company, [{ to: SINK_ACCOUNT, amount: add(wages, rent) }], 'payroll_and_rent');
+    settle(ctx, company, [{ to: SINK_ACCOUNT, amount: wages }], 'payroll');
+    payRent(ctx, company, rent, 'commercial', offices.playerShare, 'rent:office');
     company.month.costs = add(company.month.costs, add(wages, rent));
     state.macro.npcPayrollThisMonth = add(state.macro.npcPayrollThisMonth, wages);
   }
+  distributeRents(ctx, 'commercial');
 
   for (const loan of Object.values(state.loans)) {
     serviceLoan(ctx, loan);
@@ -103,6 +118,10 @@ function serviceLoan(ctx: TickContext, loan: Loan): void {
   if (debtor === undefined) return;
   const { interest, principal } = loanInstallment(loan);
   const due = add(interest, principal);
+  if (loan.lenderId !== undefined) {
+    servicePeerLoan(ctx, loan, debtor, interest, principal);
+    return;
+  }
   settle(ctx, debtor, [{ to: SINK_ACCOUNT, amount: due }], `loan:${loan.purpose}`);
   debtor.month.debtService = add(debtor.month.debtService, due);
   if (loan.borrower.kind === 'company') {
@@ -114,6 +133,71 @@ function serviceLoan(ctx: TickContext, loan: Loan): void {
   loan.remainingMonths -= 1;
   if (loan.principal <= 0 || loan.remainingMonths <= 0) {
     removeLoan(state, loan.id);
+    if (debtor.arrears === 0) rewardRepayment(ctx, loan);
+  }
+}
+
+/**
+ * Prestito tra giocatori (GDD §12.2): la rata va al prestatore. Se il debitore non paga, nessuno
+ * copre il buco: dopo troppi mesi di insolvenza il prestatore perde il capitale residuo.
+ */
+function servicePeerLoan(
+  ctx: TickContext,
+  loan: Loan,
+  debtor: Player | Company,
+  interest: Amount,
+  principal: Amount,
+): void {
+  const { state, config } = ctx;
+  const lender = loan.lenderId === undefined ? undefined : state.players[loan.lenderId];
+  const due = add(interest, principal);
+  const paid = amount(Math.min(due, Math.max(0, balanceOf(state.ledger, debtor.account))));
+  if (lender !== undefined && paid > 0) {
+    ctx.post({
+      kind: 'transfer',
+      reason: 'loan:peer_installment',
+      postings: [
+        { account: debtor.account, amount: negate(paid) },
+        { account: lender.account, amount: paid },
+      ],
+    });
+    lender.month.capitalIncome = add(lender.month.capitalIncome, amount(Math.min(paid, interest)));
+  }
+  debtor.month.debtService = add(debtor.month.debtService, due);
+  if ('npcWorkers' in debtor) debtor.month.costs = add(debtor.month.costs, interest);
+
+  if (paid < due) {
+    loan.monthsInDefault = (loan.monthsInDefault ?? 0) + 1;
+    if (loan.monthsInDefault > config.progression.peerLending.maxMonthsInDefault) {
+      const borrower =
+        loan.borrower.kind === 'player' ? debtor : state.players[(debtor as Company).ownerId];
+      if (borrower !== undefined && 'reputation' in borrower) {
+        borrower.reputation = Math.max(
+          0,
+          borrower.reputation + config.progression.reputation.peerLoanDefault,
+        );
+      }
+      removeLoan(state, loan.id);
+      ctx.emit({ type: 'peer_loan_default', loanId: loan.id, lenderId: lender?.id ?? '' });
+    }
+    return;
+  }
+  loan.monthsInDefault = 0;
+  loan.principal = amount(loan.principal - principal);
+  loan.remainingMonths -= 1;
+  if (loan.principal <= 0 || loan.remainingMonths <= 0) {
+    removeLoan(state, loan.id);
+    rewardRepayment(ctx, loan);
+  }
+}
+
+function rewardRepayment(ctx: TickContext, loan: Loan): void {
+  const { state, config } = ctx;
+  const ownerId =
+    loan.borrower.kind === 'player' ? loan.borrower.id : state.companies[loan.borrower.id]?.ownerId;
+  const owner = ownerId === undefined ? undefined : state.players[ownerId];
+  if (owner !== undefined) {
+    owner.reputation = Math.min(100, owner.reputation + config.progression.reputation.loanRepaid);
   }
 }
 

@@ -114,7 +114,11 @@ const SIM_HANDLERS: CommandHandlers = {
 /** Prefisso dei bot che gestiscono le aziende di prova della filiera: esclusi dai risultati. */
 const CHAIN_PREFIX = 'chain-';
 
-export function createBots(options: ScenarioOptions): BotProfile[] {
+function pick(values: readonly string[], i: number): string {
+  return values[i % values.length] as string;
+}
+
+export function createBots(options: ScenarioOptions, config: BalanceConfig): BotProfile[] {
   const rng = createRng(`${options.seed}/bots`);
   const names: Strategy['name'][] = ['prudent', 'aggressive', 'random'];
   const bots: BotProfile[] = [];
@@ -126,6 +130,9 @@ export function createBots(options: ScenarioOptions): BotProfile[] {
         strategy: makeStrategy(names[i % names.length] as Strategy['name'], rng),
         ...(classId === 'entrepreneur'
           ? { sector: STARTER_SECTORS[i % STARTER_SECTORS.length] as SectorId }
+          : {}),
+        ...(classId === 'employee' || classId === 'freelancer'
+          ? { role: pick(Object.keys(config.progression.roles[classId]), i) }
           : {}),
       });
     }
@@ -145,7 +152,7 @@ export function createBots(options: ScenarioOptions): BotProfile[] {
 export function runSeason(options: ScenarioOptions, config: BalanceConfig): SeasonResult {
   const ticksPerMonth = config.global.time.ticksPerMonth;
   const months = options.months ?? config.global.time.monthsPerSeason;
-  const bots = createBots(options);
+  const bots = createBots(options, config);
   const rng = createRng(`${options.seed}/decisions`);
   let state: CityState = createCityState({ cityId: 'sim', seed: options.seed, config });
 

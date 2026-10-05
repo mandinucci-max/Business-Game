@@ -17,8 +17,18 @@ import {
 const config = loadBalanceConfig();
 
 const joins: Command[] = [
-  { id: 'j1', playerId: 'emp', type: 'player.join', payload: { classId: 'employee' } },
-  { id: 'j2', playerId: 'fre', type: 'player.join', payload: { classId: 'freelancer' } },
+  {
+    id: 'j1',
+    playerId: 'emp',
+    type: 'player.join',
+    payload: { classId: 'employee', role: 'operations' },
+  },
+  {
+    id: 'j2',
+    playerId: 'fre',
+    type: 'player.join',
+    payload: { classId: 'freelancer', role: 'tax' },
+  },
   {
     id: 'j3',
     playerId: 'ent',
@@ -223,6 +233,6 @@ describe('fallimento', () => {
     expect(player?.creditRating).toBe('D');
     const job = runTick(current, [cmd('job', 'ent', 'job.acceptNpc', {})], config);
     expect(job.report.rejectedCommands).toEqual([]);
-    expect(job.state.players.ent?.npcJobMonthlyWage).toBeGreaterThan(0);
+    expect(job.state.players.ent?.npcJob).not.toBeNull();
   });
 });
