@@ -340,6 +340,12 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
     }
     if (payload.count > career.maxCollaborators)
       throw new CommandRejectedError('Troppi collaboratori');
+    requireHours(
+      ctx,
+      player,
+      (payload.count - player.freelance.collaborators) *
+        ctx.config.progression.hours.hoursPerCollaborator,
+    );
     player.freelance.collaborators = payload.count;
   }),
 
