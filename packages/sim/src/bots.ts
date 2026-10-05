@@ -461,7 +461,7 @@ function manageCareer(
     }
     if (practice.hours === 0 && hasClass(player, 'freelancer')) {
       const room = hourLimit(config, player) - committedHours(state, config, player) - 40;
-      if (room >= 40) add('freelance.setHours', { hours: Math.min(120, room) });
+      if (room >= 40) add('freelance.setHours', { hours: Math.min(140, room) });
     }
   }
 

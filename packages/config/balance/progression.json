@@ -31,7 +31,7 @@
     "npcJobFullTime": 160,
     "npcJobPartTime": 80,
     "managementPerCompany": 40,
-    "defaultFreelanceHours": 120,
+    "defaultFreelanceHours": 140,
     "overtimeWellbeingCostPerHour": 0.3
   },
   "wellbeing": {
@@ -93,7 +93,7 @@
       }
     ],
     "freelancer": {
-      "baseHourlyRate": 23.3,
+      "baseHourlyRate": 20,
       "rateGrowthPerLevel": 0.08,
       "establishedClientMonths": 10,
       "establishedReputation": 40,
