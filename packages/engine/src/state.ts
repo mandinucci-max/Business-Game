@@ -6,7 +6,7 @@ import {
   SECTOR_IDS,
   type SectorId,
 } from '@business-game/config';
-import { type AccountId, type LedgerState, createLedger } from './ledger';
+import { type AccountId, type LedgerState, createLedger, openAccount } from './ledger';
 import { type Amount, ZERO } from './money';
 
 export const STATE_SCHEMA_VERSION = 2;
@@ -192,12 +192,16 @@ export function createCityState(params: {
   }
 
   const laborForce = operatorEmployment / (1 - config.economy.labour.startingUnemployment);
+  const ledger = createLedger();
+  for (const sector of SECTOR_IDS) {
+    openAccount(ledger, `market:${sector}`);
+  }
   return {
     schemaVersion: STATE_SCHEMA_VERSION,
     cityId: params.cityId,
     seed: params.seed,
     tick: 0,
-    ledger: createLedger(),
+    ledger,
     players: {},
     companies: {},
     loans: {},

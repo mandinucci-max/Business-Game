@@ -62,6 +62,8 @@ export const APPLY_COMMANDS_STEP = 'apply_commands';
 export interface TickOptions {
   readonly pipeline?: Pipeline;
   readonly commandHandlers?: CommandHandlers;
+  /** Conserva l'elenco delle transazioni nel rapporto (predefinito: sì; il simulatore lo spegne). */
+  readonly recordTransactions?: boolean;
 }
 
 export interface TickReport {
@@ -113,6 +115,7 @@ export function runTick(
   const draft = structuredClone(state);
   const date = dateOfTick(draft.tick, calendar);
   const transactions: Transaction[] = [];
+  const recordTransactions = options.recordTransactions ?? true;
   const executedSteps: string[] = [];
   const events: GameEvent[] = [];
   const streams = new Map<string, Rng>();
@@ -131,7 +134,7 @@ export function runTick(
     },
     post(input) {
       const transaction = postTransaction(draft.ledger, input, date.tick);
-      transactions.push(transaction);
+      if (recordTransactions) transactions.push(transaction);
       return transaction;
     },
     emit(event) {

@@ -1,6 +1,6 @@
 import { SECTOR_IDS, type SectorId } from '@business-game/config';
 import { SINK_ACCOUNT, balanceOf } from '../ledger';
-import { type Amount, ZERO, add, credits, multiply, toCredits } from '../money';
+import { type Amount, ZERO, add, amount, credits, multiply, toCredits } from '../money';
 import { type Company, type Player, unitsPerNpcWorkerWeek } from '../state';
 import type { TickContext } from '../tick';
 import {
@@ -20,6 +20,7 @@ import {
   inputRequirements,
   marketParams,
   marketWage,
+  marketAccount,
   operatorPrice,
   referenceWeeklyRevenue,
 } from './sector';
@@ -225,36 +226,50 @@ function settleSector(ctx: TickContext, sector: SectorId, buyers: readonly Buyer
   for (const supplier of suppliers) supplier.output = sold.get(supplier.id) ?? 0;
   const servedShare = demand > 0 ? playerSales / demand : 0;
 
+  // Valore per unità di domanda servita dai giocatori: media dei prezzi pesata sulle vendite.
+  const playerValuePerUnit =
+    demand > 0
+      ? suppliers.reduce((sum, c) => sum + toCredits(c.price) * (sold.get(c.id) ?? 0), 0) / demand
+      : 0;
   const revenue = new Map<string, Amount>(suppliers.map((c) => [c.id, ZERO]));
+  const credit = (supplierId: string, value: Amount) =>
+    revenue.set(supplierId, add(revenue.get(supplierId) ?? ZERO, value));
+
+  // Gli acquirenti giocatori pagano una sola volta al conto di compensazione del mercato, che poi
+  // paga i fornitori: il costo è proporzionale ad acquirenti + fornitori, non al loro prodotto.
+  const clearing = marketAccount(sector);
   for (const buyer of buyers) {
-    const payments: Payment[] = [];
-    for (const supplier of suppliers) {
-      const units = demand > 0 ? (buyer.units * (sold.get(supplier.id) ?? 0)) / demand : 0;
-      const value = multiply(supplier.price, units);
-      if (value > 0) {
-        payments.push({ to: supplier.account, amount: value });
-        revenue.set(supplier.id, add(revenue.get(supplier.id) ?? ZERO, value));
-      }
-    }
-    const fromOperator = credits(buyer.units * (1 - servedShare) * opPrice);
     if (buyer.kind === 'npc') {
+      const payments: Payment[] = [];
+      for (const supplier of suppliers) {
+        const units = demand > 0 ? (buyer.units * (sold.get(supplier.id) ?? 0)) / demand : 0;
+        const value = multiply(supplier.price, units);
+        if (value > 0) {
+          payments.push({ to: supplier.account, amount: value });
+          credit(supplier.id, value);
+        }
+      }
       receiveFromOutside(ctx, payments, `sales:${sector}:npc`);
       continue;
     }
     const entity = buyer.entity as Player | Company;
-    payments.push({ to: SINK_ACCOUNT, amount: fromOperator });
+    const toSuppliers = credits(buyer.units * playerValuePerUnit);
+    const toOperator = credits(buyer.units * (1 - servedShare) * opPrice);
     settle(
       ctx,
       entity,
-      payments,
+      [
+        { to: clearing, amount: toSuppliers },
+        { to: SINK_ACCOUNT, amount: toOperator },
+      ],
       buyer.kind === 'player' ? `basket:${sector}` : `inputs:${sector}`,
     );
     if (buyer.kind === 'company') {
       const company = entity as Company;
-      const total = payments.reduce((sum, p) => add(sum, p.amount), ZERO);
-      company.month.costs = add(company.month.costs, total);
+      company.month.costs = add(company.month.costs, add(toSuppliers, toOperator));
     }
   }
+  distributeClearing(ctx, clearing, suppliers, sold, credit);
 
   let soldValue = 0;
   let soldQuality = 0;
@@ -303,6 +318,43 @@ function settleSector(ctx: TickContext, sector: SectorId, buyers: readonly Buyer
     demand > 0
       ? (soldQuality + operatorUnits * config.economy.market.operatorQuality) / demand
       : config.economy.market.operatorQuality;
+}
+
+/**
+ * Il conto di compensazione distribuisce tutto ciò che ha incassato ai fornitori in proporzione
+ * al valore venduto; l'ultimo riceve il resto, così il conto torna sempre esattamente a zero.
+ */
+function distributeClearing(
+  ctx: TickContext,
+  clearing: string,
+  suppliers: readonly Company[],
+  sold: ReadonlyMap<string, number>,
+  credit: (supplierId: string, value: Amount) => void,
+): void {
+  const received = balanceOf(ctx.state.ledger, clearing);
+  if (received <= 0) return;
+  const weights = suppliers.map((c) => toCredits(c.price) * (sold.get(c.id) ?? 0));
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  if (total <= 0) return;
+  const payments: Payment[] = [];
+  let paid = 0;
+  suppliers.forEach((supplier, i) => {
+    const isLast = i === suppliers.length - 1;
+    const value = isLast ? received - paid : Math.floor((received * (weights[i] ?? 0)) / total);
+    if (value > 0) {
+      payments.push({ to: supplier.account, amount: amount(value) });
+      credit(supplier.id, amount(value));
+      paid += value;
+    }
+  });
+  ctx.post({
+    kind: 'transfer',
+    reason: 'market:clearing',
+    postings: [
+      { account: clearing, amount: amount(-paid) },
+      ...payments.map((p) => ({ account: p.to, amount: p.amount })),
+    ],
+  });
 }
 
 /** Spese settimanali per area e aggiornamento di brand, ricerca, qualità, servizio, reputazione. */

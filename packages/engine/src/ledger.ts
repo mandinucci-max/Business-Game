@@ -115,6 +115,8 @@ export function postTransaction(
     throw new LedgerError('too_few_postings', 'Una transazione richiede almeno due scritture');
   }
 
+  // Ogni conto viene risolto una sola volta per transazione.
+  const accounts = new Map<AccountId, Account>();
   const deltas = new Map<AccountId, number>();
   let sum = 0;
   for (const posting of input.postings) {
@@ -122,7 +124,9 @@ export function postTransaction(
     if (value === 0) {
       throw new LedgerError('zero_posting', `Scrittura a zero sul conto ${posting.account}`);
     }
-    getAccount(ledger, posting.account);
+    if (!accounts.has(posting.account)) {
+      accounts.set(posting.account, getAccount(ledger, posting.account));
+    }
     deltas.set(posting.account, amount((deltas.get(posting.account) ?? 0) + value));
     sum = amount(sum + value);
   }
@@ -145,18 +149,18 @@ export function postTransaction(
     );
   }
 
-  const newBalances = new Map<AccountId, Amount>();
+  const newBalances = new Map<Account, Amount>();
   for (const [id, delta] of deltas) {
-    const account = getAccount(ledger, id);
+    const account = accounts.get(id) as Account;
     const balance = add(account.balance, amount(delta));
     if (!isSystemAccount(id) && balance < -account.overdraftLimit) {
       throw new LedgerError('insufficient_funds', `Fondi insufficienti sul conto ${id}`);
     }
-    newBalances.set(id, balance);
+    newBalances.set(account, balance);
   }
 
-  for (const [id, balance] of newBalances) {
-    getAccount(ledger, id).balance = balance;
+  for (const [account, balance] of newBalances) {
+    account.balance = balance;
   }
   if (input.kind === 'faucet') {
     ledger.totalFaucet = add(ledger.totalFaucet, negate(amount(mintDelta)));

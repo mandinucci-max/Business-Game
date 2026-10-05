@@ -10,7 +10,8 @@ Gioco di strategia economica multiplayer online, persistente, basato sulle logic
 
 ## Stato
 
-Fase 0 (fondamenta) completata: configurazione di bilanciamento validata e scheletro del motore deterministico.
+- Fase 0 (fondamenta) completata.
+- Fase 1 (motore economico offline): economia circolare con mercato causale, filiera dei 9 settori, consumi delle persone, banca, tasse, macroeconomia, eventi e simulatore con bot.
 
 ## Struttura
 
@@ -18,6 +19,7 @@ Fase 0 (fondamenta) completata: configurazione di bilanciamento validata e schel
 packages/
   config/   parametri di bilanciamento (balance/*.json) + schema di validazione
   engine/   motore di simulazione puro e deterministico
+  sim/      bot, simulatore Monte Carlo e report di bilanciamento
 docs/       GDD e piano di implementazione
 ```
 
@@ -30,7 +32,13 @@ npm install
 npm run check        # lint + formato + tipi + test
 npm test             # solo i test
 npm run format       # formatta il codice
+npm run sim -- --seasons 20 --out report.md   # simula 20 stagioni con i bot
 ```
+
+Il simulatore gioca stagioni complete con 200 bot (dipendenti, liberi professionisti,
+imprenditori, investitori con strategie prudenti, aggressive e casuali) e confronta i risultati
+con gli obiettivi di salute del GDD (Appendice A.3). Esce con codice 1 se un obiettivo è fuori
+intervallo. Ogni notte il CI ne esegue 50 (workflow "Bilanciamento").
 
 Regole del motore:
 

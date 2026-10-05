@@ -94,3 +94,8 @@ export function activeCompanies(state: CityState, sector?: SectorId): Company[] 
     (company) => company.status === 'active' && (sector === undefined || company.sector === sector),
   );
 }
+
+/** Conto di compensazione di un mercato: incassa dagli acquirenti e paga i fornitori nello stesso tick. */
+export function marketAccount(sector: SectorId): string {
+  return `market:${sector}`;
+}

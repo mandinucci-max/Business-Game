@@ -159,7 +159,10 @@ export function runSeason(options: ScenarioOptions, config: BalanceConfig): Seas
     if (tick === 1 && options.fullSupplyChain === true) {
       commands.push(...chainCommands());
     }
-    const result = runTick(state, commands, config, { commandHandlers: SIM_HANDLERS });
+    const result = runTick(state, commands, config, {
+      commandHandlers: SIM_HANDLERS,
+      recordTransactions: false,
+    });
     state = result.state;
     rejected += result.report.rejectedCommands.length;
     for (const rejection of result.report.rejectedCommands) {
