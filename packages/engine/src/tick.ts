@@ -64,6 +64,8 @@ export interface TickOptions {
   readonly commandHandlers?: CommandHandlers;
   /** Conserva l'elenco delle transazioni nel rapporto (predefinito: sì; il simulatore lo spegne). */
   readonly recordTransactions?: boolean;
+  /** false: applica solo i comandi, senza passi della pipeline e senza far avanzare il tempo. */
+  readonly advance?: boolean;
 }
 
 export interface TickReport {
@@ -150,8 +152,13 @@ export function runTick(
   );
   executedSteps.push(APPLY_COMMANDS_STEP);
 
+  const advance = options.advance ?? true;
   const pipeline = options.pipeline ?? DEFAULT_PIPELINE;
-  const steps = date.isMonthEnd ? [...pipeline.weekly, ...pipeline.monthly] : pipeline.weekly;
+  const steps = !advance
+    ? []
+    : date.isMonthEnd
+      ? [...pipeline.weekly, ...pipeline.monthly]
+      : pipeline.weekly;
   for (const step of steps) {
     step.run?.(ctx);
     executedSteps.push(step.name);
@@ -162,11 +169,23 @@ export function runTick(
     throw new InvariantViolationError(date.tick, violations);
   }
 
-  draft.tick += 1;
+  if (advance) draft.tick += 1;
   return {
     state: draft,
     report: { date, executedSteps, transactions, rejectedCommands, events },
   };
+}
+
+/**
+ * Applica subito dei comandi tra un tick e l'altro (es. l'ingresso di un nuovo giocatore, che non
+ * deve aspettare ore): stesse validazioni e invarianti del tick, ma il tempo non avanza.
+ */
+export function applyCommandsNow(
+  state: CityState,
+  commands: readonly Command[],
+  config: BalanceConfig,
+): TickResult {
+  return runTick(state, commands, config, { advance: false, recordTransactions: false });
 }
 
 const MAX_NOTES = 40;

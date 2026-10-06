@@ -11,6 +11,17 @@ jobs:
   check:
     name: Lint, formato, tipi, test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bg
+          POSTGRES_PASSWORD: bg-ci-only
+          POSTGRES_DB: bg
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bg" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +33,8 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
+        env:
+          TEST_DATABASE_URL: postgres://bg:bg-ci-only@localhost:5432/bg
 
   dependencies:
     name: Audit delle dipendenze

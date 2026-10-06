@@ -127,6 +127,27 @@ const schemas = {
 export type CommandType = keyof typeof schemas;
 export type CommandPayload<T extends CommandType> = z.infer<(typeof schemas)[T]>;
 
+export const COMMAND_TYPES = Object.keys(schemas) as readonly CommandType[];
+
+export function isCommandType(type: string): type is CommandType {
+  return Object.hasOwn(schemas, type);
+}
+
+/**
+ * Controllo di forma anticipato (lo usa il server prima di accodare): le regole di gioco vere
+ * restano nel tick, dove si conosce lo stato aggiornato.
+ */
+export function validateCommandPayload(
+  type: string,
+  payload: unknown,
+): { ok: true } | { ok: false; message: string } {
+  if (!isCommandType(type)) return { ok: false, message: `Tipo di comando sconosciuto: ${type}` };
+  const result = schemas[type].safeParse(payload);
+  return result.success
+    ? { ok: true }
+    : { ok: false, message: `Dati non validi: ${result.error.issues[0]?.message ?? ''}` };
+}
+
 function parse<T extends CommandType>(type: T, payload: unknown): CommandPayload<T> {
   const result = schemas[type].safeParse(payload);
   if (!result.success) {
