@@ -27,7 +27,8 @@ import {
   investorLevel,
   npcJobWage,
   skillLevel,
-  unlockBlocker,
+  type UnlockRequirement,
+  unlockRequirement,
   xpForLevel,
 } from './economy/progression';
 import { rentalMarket, unitPrice, unitRent } from './economy/realEstate';
@@ -105,7 +106,7 @@ export interface PlayerSummary {
   } | null;
   readonly properties: { readonly residential: number; readonly commercial: number };
   readonly investorLevel: number;
-  readonly unlocks: Readonly<Record<ClassId, string | null>>;
+  readonly unlocks: Readonly<Record<ClassId, UnlockRequirement | null>>;
   readonly autopilot: AutopilotRules;
 }
 
@@ -308,8 +309,11 @@ function summary(state: CityState, config: BalanceConfig, player: Player): Playe
     }),
   ) as Record<SkillId, { level: number; xp: number; nextLevelXp: number | null }>;
   const unlocks = Object.fromEntries(
-    CLASS_IDS.map((c) => [c, hasClass(player, c) ? null : unlockBlocker(state, config, player, c)]),
-  ) as Record<ClassId, string | null>;
+    CLASS_IDS.map((c) => [
+      c,
+      hasClass(player, c) ? null : unlockRequirement(state, config, player, c),
+    ]),
+  ) as Record<ClassId, UnlockRequirement | null>;
   return {
     id: player.id,
     classId: player.classId,
@@ -498,6 +502,21 @@ export function decisionCards(
           cash: Math.round(company.cash),
           payroll: Math.round(company.wage * company.workers),
         },
+        // Versamento suggerito: due mesi di stipendi, nei limiti della liquidità personale.
+        ...(view.player.cash > 1
+          ? {
+              suggestion: {
+                type: 'company.transferCash',
+                payload: {
+                  companyId: company.id,
+                  direction: 'deposit',
+                  amount: Math.floor(
+                    Math.min(view.player.cash, company.wage * company.workers * 2),
+                  ),
+                },
+              },
+            }
+          : {}),
       });
     }
     if (company.equipment < company.requiredEquipment * 0.9) {

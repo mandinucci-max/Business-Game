@@ -17,5 +17,12 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["packages/*/src", "packages/*/test", "vitest.config.ts"]
+  "include": [
+    "packages/*/src",
+    "packages/*/test",
+    "vitest.config.ts",
+    "e2e",
+    "playwright.config.ts"
+  ],
+  "exclude": ["packages/web"]
 }

@@ -139,9 +139,10 @@ describe('autenticazione', () => {
 
   it('il logout invalida la sessione lato server', async () => {
     const client = await register('elena');
-    expect((await get(client, '/api/auth/me')).statusCode).toBe(200);
+    expect((await get(client, '/api/auth/me')).json<{ user: unknown }>().user).not.toBeNull();
     expect((await post(client, '/api/auth/logout', {})).statusCode).toBe(200);
-    expect((await get(client, '/api/auth/me')).statusCode).toBe(401);
+    expect((await get(client, '/api/auth/me')).json<{ user: unknown }>().user).toBeNull();
+    expect((await get(client, '/api/game/view')).statusCode).toBe(401);
   });
 
   it('limita i tentativi di accesso', async () => {

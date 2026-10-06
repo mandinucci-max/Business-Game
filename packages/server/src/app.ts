@@ -213,9 +213,10 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     return { ok: true };
   });
 
-  app.get('/api/auth/me', async (request, reply) => {
-    const auth = requireAuth(request, reply);
-    if (auth === null) return reply;
+  // Senza sessione risponde 200 con user null: la web app lo chiama a ogni apertura.
+  app.get('/api/auth/me', async (request) => {
+    const auth = request.auth;
+    if (auth === null) return { user: null, csrfToken: null };
     return { user: publicUser(auth.user, game), csrfToken: auth.session.csrfToken };
   });
 

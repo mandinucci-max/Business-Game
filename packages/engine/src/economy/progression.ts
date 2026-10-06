@@ -292,41 +292,78 @@ function updateTraits(state: CityState, config: BalanceConfig, player: Player): 
 }
 
 /** Requisiti di sblocco di una classe (GDD §5.4); restituisce il motivo del rifiuto o null. */
+export interface UnlockRequirement {
+  readonly key: string;
+  readonly params: Readonly<Record<string, string | number>>;
+}
+
+/** Primo requisito mancante per sbloccare una classe, come chiave traducibile (null = sbloccabile). */
+export function unlockRequirement(
+  state: CityState,
+  config: BalanceConfig,
+  player: Player,
+  classId: ClassId,
+): UnlockRequirement | null {
+  const u = config.progression.unlock;
+  const cash = balanceOf(state.ledger, player.account) / 100;
+  if (hasClass(player, classId)) return { key: 'unlock.active', params: {} };
+  switch (classId) {
+    case 'employee':
+      return null;
+    case 'entrepreneur':
+      if (skillLevel(config, player, 'management') < u.entrepreneur.management) {
+        return {
+          key: 'unlock.skill',
+          params: { skill: 'management', level: u.entrepreneur.management },
+        };
+      }
+      return cash >= u.entrepreneur.cash
+        ? null
+        : { key: 'unlock.cash', params: { amount: u.entrepreneur.cash } };
+    case 'freelancer': {
+      const best = Math.max(...SKILL_IDS.map((s) => skillLevel(config, player, s)));
+      if (best < u.freelancer.skill) {
+        return { key: 'unlock.anySkill', params: { level: u.freelancer.skill } };
+      }
+      if (player.reputation < u.freelancer.reputation) {
+        return { key: 'unlock.reputation', params: { reputation: u.freelancer.reputation } };
+      }
+      return cash >= u.freelancer.examCost
+        ? null
+        : { key: 'unlock.exam', params: { amount: u.freelancer.examCost } };
+    }
+    case 'investor': {
+      const investable = cash + balanceOf(state.ledger, player.fundAccount) / 100;
+      if (skillLevel(config, player, 'finance') < u.investor.finance) {
+        return { key: 'unlock.skill', params: { skill: 'finance', level: u.investor.finance } };
+      }
+      return investable >= u.investor.investable
+        ? null
+        : { key: 'unlock.investable', params: { amount: u.investor.investable } };
+    }
+  }
+}
+
+const UNLOCK_MESSAGES: Record<string, (p: Readonly<Record<string, string | number>>) => string> = {
+  'unlock.active': () => 'Classe già attiva',
+  'unlock.skill': (p) =>
+    `Serve ${p.skill === 'finance' ? 'Finanza' : 'Gestione'} livello ${String(p.level)}`,
+  'unlock.cash': (p) => `Servono ${String(p.amount)} Cr di capitale`,
+  'unlock.anySkill': (p) => `Serve una competenza al livello ${String(p.level)}`,
+  'unlock.reputation': (p) => `Serve reputazione ${String(p.reputation)}`,
+  'unlock.exam': () => "Fondi insufficienti per l'esame",
+  'unlock.investable': (p) => `Servono ${String(p.amount)} Cr investibili`,
+};
+
 export function unlockBlocker(
   state: CityState,
   config: BalanceConfig,
   player: Player,
   classId: ClassId,
 ): string | null {
-  const u = config.progression.unlock;
-  const cash = balanceOf(state.ledger, player.account) / 100;
-  if (hasClass(player, classId)) return 'Classe già attiva';
-  switch (classId) {
-    case 'employee':
-      return null;
-    case 'entrepreneur':
-      if (skillLevel(config, player, 'management') < u.entrepreneur.management) {
-        return `Serve Gestione livello ${u.entrepreneur.management}`;
-      }
-      return cash >= u.entrepreneur.cash ? null : `Servono ${u.entrepreneur.cash} Cr di capitale`;
-    case 'freelancer': {
-      const best = Math.max(...SKILL_IDS.map((s) => skillLevel(config, player, s)));
-      if (best < u.freelancer.skill) return `Serve una competenza al livello ${u.freelancer.skill}`;
-      if (player.reputation < u.freelancer.reputation) {
-        return `Serve reputazione ${u.freelancer.reputation}`;
-      }
-      return cash >= u.freelancer.examCost ? null : "Fondi insufficienti per l'esame";
-    }
-    case 'investor': {
-      const investable = cash + balanceOf(state.ledger, player.fundAccount) / 100;
-      if (skillLevel(config, player, 'finance') < u.investor.finance) {
-        return `Serve Finanza livello ${u.investor.finance}`;
-      }
-      return investable >= u.investor.investable
-        ? null
-        : `Servono ${u.investor.investable} Cr investibili`;
-    }
-  }
+  const requirement = unlockRequirement(state, config, player, classId);
+  if (requirement === null) return null;
+  return UNLOCK_MESSAGES[requirement.key]?.(requirement.params) ?? requirement.key;
 }
 
 /** Bonus delle competenze del titolare sull'azienda (GDD §9.2). */

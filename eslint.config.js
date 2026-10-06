@@ -8,6 +8,7 @@ export default defineConfig(
   js.configs.recommended,
   tseslint.configs.strict,
   { languageOptions: { globals: globals.node } },
+  { files: ['packages/web/src/**/*.{ts,tsx}'], languageOptions: { globals: globals.browser } },
   {
     // Il motore deve essere deterministico: stesso stato + stessi comandi + stesso seed = stesso risultato.
     files: ['packages/engine/src/**/*.ts'],
