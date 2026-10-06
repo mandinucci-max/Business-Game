@@ -52,6 +52,11 @@ const schemas = {
     role: z.string().min(1).max(40).optional(),
   }),
   'player.setLifestyle': z.strictObject({ level: z.int().min(1).max(5) }),
+  'player.setAutopilot': z.strictObject({
+    pricing: z.boolean(),
+    replaceQuits: z.boolean(),
+    investSurplus: z.boolean(),
+  }),
   'skill.setStudy': z.strictObject({ skill: z.enum(SKILL_IDS), hours }),
   'class.unlock': z.strictObject({
     classId: z.enum(CLASS_IDS),
@@ -256,6 +261,10 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
 
   'player.setLifestyle': handler('player.setLifestyle', (ctx, command, payload) => {
     requirePlayer(ctx, command).lifestyleLevel = payload.level;
+  }),
+
+  'player.setAutopilot': handler('player.setAutopilot', (ctx, command, payload) => {
+    requirePlayer(ctx, command).autopilot = { ...payload };
   }),
 
   'skill.setStudy': handler('skill.setStudy', (ctx, command, payload) => {
@@ -555,6 +564,7 @@ export const DEFAULT_COMMAND_HANDLERS: CommandHandlers = {
       if (missing > 0) buyEquipment(ctx, company, missing);
     }
     company.npcWorkers = payload.workers;
+    company.targetWorkers = payload.workers;
     company.wage = credits(payload.wage);
     macro.employment += hires;
     macro.unemployment = Math.max(0, 1 - macro.employment / macro.laborForce);

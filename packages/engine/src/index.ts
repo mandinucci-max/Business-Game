@@ -20,3 +20,6 @@ export {
 export * from './economy/valuation';
 export * from './economy/progression';
 export * from './economy/realEstate';
+export * from './economy/reports';
+export * from './views';
+export * from './autopilot';

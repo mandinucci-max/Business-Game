@@ -71,6 +71,9 @@ export function joinPlayer(
     bankruptcies: 0,
     lastBankruptcyTick: null,
     benefitMonthsLeft: 0,
+    notes: [],
+    report: null,
+    autopilot: { pricing: false, replaceQuits: false, investSurplus: false },
   };
   // Competenze di partenza (GDD §4.1): quelle fisse della classe e quella del ruolo scelto.
   for (const [skill, level] of Object.entries(start.fixedSkills) as [SkillId, number][]) {
@@ -169,6 +172,8 @@ export function foundCompany(
     lastOutput: 0,
     equipment: credits(params.equipment),
     shares: { [params.ownerId]: 1 },
+    targetWorkers: workers,
+    previous: { customers: 0, satisfaction: 1, price: ZERO, workers },
     equityOffer: null,
     creditRating: params.creditRating,
     month: { revenue: ZERO, costs: ZERO, debtService: ZERO },

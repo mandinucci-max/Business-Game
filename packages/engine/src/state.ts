@@ -10,7 +10,7 @@ import {
 import { type AccountId, type LedgerState, createLedger, openAccount } from './ledger';
 import { type Amount, ZERO } from './money';
 
-export const STATE_SCHEMA_VERSION = 3;
+export const STATE_SCHEMA_VERSION = 4;
 
 export type PlayerId = string;
 export type CompanyId = string;
@@ -92,6 +92,48 @@ export interface Player extends Debtor {
   lastBankruptcyTick: number | null;
   /** Mesi di sussidio rimasti dopo la perdita del reddito. */
   benefitMonthsLeft: number;
+  /** Fatti del mese che riguardano il giocatore, per il rapporto mensile. */
+  notes: PlayerNote[];
+  /** Ultimo rapporto mensile (GDD §19.2). */
+  report: MonthlyReport | null;
+  /** Regole del pilota automatico (GDD §19.3). */
+  autopilot: AutopilotRules;
+}
+
+export interface PlayerNote {
+  readonly tick: number;
+  readonly type: string;
+  readonly params: Readonly<Record<string, string | number | boolean>>;
+}
+
+/** Una voce del rapporto: chiave di traduzione + parametri, la web app la rende nella lingua scelta. */
+export interface ReportItem {
+  readonly key: string;
+  readonly params: Readonly<Record<string, string | number>>;
+  /** Cause del cambiamento ("Perché?"), anch'esse come chiavi di traduzione. */
+  readonly why: readonly { key: string; params: Readonly<Record<string, string | number>> }[];
+  readonly tone: 'good' | 'bad' | 'neutral';
+}
+
+export interface MonthlyReport {
+  readonly monthIndex: number;
+  readonly netWorth: number;
+  readonly netWorthChange: number;
+  readonly monthlyCashflow: number;
+  readonly rank: number;
+  readonly rankChange: number;
+  readonly items: readonly ReportItem[];
+  /** Livelli delle competenze a fine mese, per segnalare i passaggi di livello. */
+  readonly skillLevels: Readonly<Record<SkillId, number>>;
+}
+
+export interface AutopilotRules {
+  /** Il prezzo delle aziende segue il mercato restando sotto l'operatore cittadino. */
+  pricing: boolean;
+  /** Chi si dimette viene sostituito, se ci sono disoccupati e cassa. */
+  replaceQuits: boolean;
+  /** La liquidità oltre 3 mesi di spese va nel fondo indice. */
+  investSurplus: boolean;
 }
 
 export interface CompanyBudget {
@@ -138,6 +180,10 @@ export interface Company extends Debtor {
   /** Quote messe in vendita dal titolare per raccogliere capitale (GDD §5.2, business angel). */
   equityOffer: { share: number; price: Amount } | null;
   creditRating: CreditRating;
+  /** Organico desiderato dal titolare (serve al pilota automatico per sostituire chi si dimette). */
+  targetWorkers: number;
+  /** Clienti e utile alla chiusura del mese precedente, per i confronti del rapporto. */
+  previous: { customers: number; satisfaction: number; price: Amount; workers: number };
   month: { revenue: Amount; costs: Amount; debtService: Amount };
   lastMonth: { revenue: Amount; costs: Amount };
   /** Utili degli ultimi 12 mesi, dal più vecchio al più recente. */
@@ -218,6 +264,24 @@ export interface CityState {
   counters: { company: number; loan: number; offer: number };
   /** Offerte di prestito pubblicate dagli investitori (GDD §12.2). */
   loanOffers: Record<string, LoanOffer>;
+  /** Classifica del Valore Economico alla chiusura dell'ultimo mese (GDD §18). */
+  ranking: { playerId: PlayerId; value: number }[];
+  /** Report di mercato pubblico, aggiornato alla chiusura del mese (GDD §17: un mese di ritardo). */
+  publicReport: PublicReport | null;
+}
+
+export interface PublicReport {
+  readonly monthIndex: number;
+  readonly inflation: number;
+  readonly unemployment: number;
+  readonly policyRate: number;
+  readonly activeEvents: readonly string[];
+  readonly markets: Readonly<
+    Record<
+      SectorId,
+      { averagePrice: number; demand: number; playerShare: number; companies: number }
+    >
+  >;
 }
 
 export interface LoanOffer {
@@ -290,6 +354,8 @@ export function createCityState(params: {
     },
     counters: { company: 0, loan: 0, offer: 0 },
     loanOffers: {},
+    ranking: [],
+    publicReport: null,
   };
 }
 

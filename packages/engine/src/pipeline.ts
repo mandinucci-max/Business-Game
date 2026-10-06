@@ -10,6 +10,7 @@ import {
   weeklyAccounting,
 } from './economy/weekly';
 import { monthlyProgression } from './economy/progression';
+import { monthlyReports } from './economy/reports';
 import type { Pipeline } from './tick';
 
 /** Ordine delle fasi del tick (piano §2.5). Le fasi senza `run` arrivano nelle fasi successive del piano. */
@@ -31,6 +32,6 @@ export const DEFAULT_PIPELINE: Pipeline = {
     { name: 'capital_bands' },
     { name: 'central_bank', run: centralBank },
     { name: 'valuation_and_rankings', run: updateRatings },
-    { name: 'hours_reset_and_reports' },
+    { name: 'hours_reset_and_reports', run: monthlyReports },
   ],
 };

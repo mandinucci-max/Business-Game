@@ -139,6 +139,7 @@ export function runTick(
     },
     emit(event) {
       events.push(event);
+      routeToPlayer(draft, date.tick, event);
     },
   };
 
@@ -166,6 +167,23 @@ export function runTick(
     state: draft,
     report: { date, executedSteps, transactions, rejectedCommands, events },
   };
+}
+
+const MAX_NOTES = 40;
+
+/** I fatti che riguardano un giocatore (o una sua azienda) finiscono nelle sue note del mese. */
+function routeToPlayer(state: CityState, tick: number, event: GameEvent): void {
+  const companyId = typeof event.companyId === 'string' ? event.companyId : undefined;
+  const playerId =
+    typeof event.playerId === 'string'
+      ? event.playerId
+      : companyId !== undefined
+        ? state.companies[companyId]?.ownerId
+        : undefined;
+  const player = playerId === undefined ? undefined : state.players[playerId];
+  if (player === undefined) return;
+  const { type, ...params } = event;
+  player.notes = [...player.notes, { tick, type, params }].slice(-MAX_NOTES);
 }
 
 function applyCommands(
