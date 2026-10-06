@@ -161,7 +161,7 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - la mediana dell'imprenditore d'origine è bassa (alta varianza): parte con una ditta che non sempre sopravvive. È coerente con il rischio della classe, ma va osservato nella vertical slice;
   - il dipendente nelle aziende dei giocatori (dirigenti, stock option) arriverà in Fase 4 e cambierà gli equilibri: rifare il bilanciamento.
 
-### Fase 3 — Vertical slice giocabile (2 mesi) ⟶ **punto di decisione**
+### Fase 3 — Vertical slice giocabile (2 mesi) ⟶ **punto di decisione** — ✅ sviluppo completato, test con i tester da avviare
 
 - **Ambito ridotto**:
   - 1 città;
@@ -177,6 +177,13 @@ Ogni fase ha **cose da consegnare** e **criteri di completamento** misurabili.
   - 10–30 tester (amici, conoscenti, community) per 2 settimane (14 mesi di gioco);
   - questionario: chiarezza, voglia di tornare il giorno dopo, percezione della causalità.
 - **Decisione**: continuare, correggere il ciclo quotidiano, oppure rivedere il design.
+- **Esito dello sviluppo**:
+  - **server** (`packages/server`): Fastify; Argon2id; sessioni in cookie HttpOnly/SameSite=Strict con solo l'hash del token salvato; token CSRF in header e controllo dell'origine; limiti di frequenza (10/min sull'accesso, 60/min sui comandi); CSP rigorosa e header di sicurezza; solo JSON, corpo max 16 KB; il `playerId` arriva sempre dalla sessione; coda dei comandi idempotente con massimo 30 comandi in attesa per giocatore; scheduler dei tick; PostgreSQL con commit atomico del tick e lock per città; ingresso in città immediato senza far avanzare il tempo;
+  - **web app** (`packages/web`): React + Vite, mobile-first, IT/EN, PWA installabile; panoramica, rapporto mensile con "Perché?", carte decisione applicabili con un clic, agenda, azienda, mercato, classifica;
+  - **motore**: vista del giocatore con filtro di visibilità (test anti-fuga), rapporto mensile, carte decisione, pilota automatico base (prezzi, sostituzione di chi si dimette, investimento dell'eccedenza);
+  - **test**: unitari e di integrazione (anche su PostgreSQL in CI), end-to-end con Playwright su mobile e desktop; screenshot in [`docs/screenshots/`](./screenshots/);
+  - **guida per i tester e per chi gestisce il server**: [`docs/GUIDA_TESTER.md`](./GUIDA_TESTER.md).
+- **Differenze rispetto all'ambito**: sono attivi tutti i 9 settori (erano già bilanciati in Fase 1–2) invece di 4; i messaggi di rifiuto dei comandi sono ancora solo in italiano; niente verifica email né 2FA (previste prima del lancio pubblico, Fase 9).
 
 ### Fase 4 — Mercati tra giocatori completi (2 mesi)
 
@@ -366,4 +373,4 @@ Si raccolgono fin dalla vertical slice:
 
 ## 9. Prossimo passo
 
-Avviare la **Fase 3** (vertical slice giocabile).
+Mettere online la vertical slice (hosting con HTTPS e PostgreSQL), invitare 10–30 tester per 2 settimane seguendo [`docs/GUIDA_TESTER.md`](./GUIDA_TESTER.md), raccogliere il questionario e prendere la **decisione di fine Fase 3**.
