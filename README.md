@@ -6,6 +6,7 @@ Gioco di strategia economica multiplayer online, persistente, basato sulle logic
 
 - [Game Design Document](docs/GDD.md) — design completo, parametri di bilanciamento.
 - [Piano di implementazione](docs/PIANO_IMPLEMENTAZIONE.md) — architettura, fasi, sicurezza, test.
+- [Pubblicazione gratuita](docs/PUBBLICAZIONE.md) — Render + Neon + cron-job.org.
 - [Guida per i tester](docs/GUIDA_TESTER.md) — come si gioca la vertical slice e come avviare il server.
 - [Sicurezza](SECURITY.md) — come segnalare una vulnerabilità.
 

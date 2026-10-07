@@ -1,0 +1,39 @@
+# Blueprint di Render (piano gratuito). Il database è su Neon (gratuito, non scade):
+# DATABASE_URL va inserito a mano nella dashboard. Vedi docs/PUBBLICAZIONE.md.
+services:
+  - type: web
+    name: business-game
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: 'true'
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: WEB_DIST
+        value: ../web/dist
+      - key: TICK_SCHEDULER
+        value: external
+      - key: TICK_INTERVAL_MS
+        value: '21600000'
+      - key: CITY_ID
+        value: citta-1
+      - key: CITY_SEED
+        value: stagione-1
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: PUBLIC_ORIGIN
+        sync: false

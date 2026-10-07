@@ -59,6 +59,8 @@ Segnala i problemi di sicurezza **solo** in privato, come spiegato in [SECURITY.
 
 ## Per chi gestisce il server
 
+Per pubblicarlo gratis (Render + Neon + cron-job.org) segui [`PUBBLICAZIONE.md`](./PUBBLICAZIONE.md).
+
 Requisiti: Node.js 22, PostgreSQL 16.
 
 ```sh
@@ -69,16 +71,17 @@ cp packages/server/.env.example packages/server/.env   # poi adatta i valori
 
 Variabili principali (vedi `packages/server/src/env.ts`):
 
-| Variabile          | Esempio                        | Note                                                |
-| ------------------ | ------------------------------ | --------------------------------------------------- |
-| `NODE_ENV`         | `production`                   | In produzione sono obbligatorie le tre seguenti     |
-| `DATABASE_URL`     | `postgres://utente:pw@host/db` | Senza, lo stato vive solo in memoria (sviluppo)     |
-| `PUBLIC_ORIGIN`    | `https://gioco.example`        | Usata per il controllo dell'origine (CSRF)          |
-| `COOKIE_SECURE`    | `true`                         | Richiede HTTPS (cookie `__Host-`)                   |
-| `TRUST_PROXY`      | `true`                         | Solo se dietro un proxy che imposta X-Forwarded-For |
-| `WEB_DIST`         | `../web/dist`                  | Il server serve anche la web app                    |
-| `TICK_INTERVAL_MS` | `21600000`                     | 6 ore = 1 mese di gioco al giorno                   |
-| `ADMIN_TOKEN`      | 32+ caratteri casuali          | Abilita `POST /admin/tick` (tick manuale)           |
+| Variabile          | Esempio                        | Note                                                     |
+| ------------------ | ------------------------------ | -------------------------------------------------------- |
+| `NODE_ENV`         | `production`                   | In produzione sono obbligatorie le tre seguenti          |
+| `DATABASE_URL`     | `postgres://utente:pw@host/db` | Senza, lo stato vive solo in memoria (sviluppo)          |
+| `PUBLIC_ORIGIN`    | `https://gioco.example`        | Usata per il controllo dell'origine (CSRF)               |
+| `COOKIE_SECURE`    | `true`                         | Richiede HTTPS (cookie `__Host-`)                        |
+| `TRUST_PROXY`      | `true`                         | Solo se dietro un proxy che imposta X-Forwarded-For      |
+| `WEB_DIST`         | `../web/dist`                  | Il server serve anche la web app                         |
+| `TICK_INTERVAL_MS` | `21600000`                     | 6 ore = 1 mese di gioco al giorno                        |
+| `TICK_SCHEDULER`   | `external`                     | Tick da cron esterno su `/admin/tick` (hosting gratuiti) |
+| `ADMIN_TOKEN`      | 32+ caratteri casuali          | Abilita `POST /admin/tick` (tick manuale)                |
 
 ```sh
 npm start                         # avvia il server (tabelle create all'avvio)

@@ -1,7 +1,7 @@
 import { loadBalanceConfig } from '@business-game/config';
 import { buildApp } from './app';
 import { loadEnv } from './env';
-import { GameService } from './game';
+import { GameService, nextAlignedTick } from './game';
 import { PostgresStore } from './pg-store';
 import { MemoryStore, type Store } from './store';
 
@@ -28,19 +28,24 @@ async function main(): Promise<void> {
   const app = await buildApp({ env, store, game });
   if (env.DATABASE_URL === undefined) app.log.warn('Nessun DATABASE_URL: stato solo in memoria');
 
-  const schedule = () => {
-    game.nextTickAt = Date.now() + env.TICK_INTERVAL_MS;
-  };
-  schedule();
-  const timer = setInterval(() => {
-    schedule();
-    game
-      .tick()
-      .then((summary) => {
-        if (summary !== null) app.log.info(summary, 'tick elaborato');
-      })
-      .catch((error: unknown) => app.log.error(error, 'tick fallito'));
-  }, env.TICK_INTERVAL_MS);
+  let timer: ReturnType<typeof setInterval> | undefined;
+  if (env.TICK_SCHEDULER === 'external') {
+    // I tick arrivano dal cron esterno agli orari allineati: qui si mostra solo il prossimo.
+    game.nextTickAt = () => nextAlignedTick(Date.now(), env.TICK_INTERVAL_MS);
+    app.log.info('Tick affidati al cron esterno (POST /admin/tick)');
+  } else {
+    let next = Date.now() + env.TICK_INTERVAL_MS;
+    game.nextTickAt = () => next;
+    timer = setInterval(() => {
+      next = Date.now() + env.TICK_INTERVAL_MS;
+      game
+        .tick()
+        .then((summary) => {
+          if (summary !== null) app.log.info(summary, 'tick elaborato');
+        })
+        .catch((error: unknown) => app.log.error(error, 'tick fallito'));
+    }, env.TICK_INTERVAL_MS);
+  }
   const cleanup = setInterval(
     () => {
       store.deleteExpiredSessions(Date.now()).catch((e: unknown) => app.log.error(e));

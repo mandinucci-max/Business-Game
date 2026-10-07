@@ -19,6 +19,13 @@ const envSchema = z
       .int()
       .min(1000)
       .default(6 * 60 * 60 * 1000),
+    /**
+     * internal: il server fa avanzare la città con un suo timer (server sempre acceso).
+     * external: i tick arrivano da un cron esterno su POST /admin/tick, allineati agli orari
+     * multipli dell'intervallo (es. 00, 06, 12, 18 UTC): adatto agli hosting gratuiti che
+     * spengono il server quando non c'è traffico.
+     */
+    TICK_SCHEDULER: z.enum(['internal', 'external']).default('internal'),
     /** Token per le operazioni dei tester (tick manuale): almeno 32 caratteri, o disattivato. */
     ADMIN_TOKEN: z.string().min(32).optional(),
     /** Origine pubblica della web app (es. https://gioco.example): usata per il controllo CSRF. */
@@ -56,6 +63,9 @@ export function loadEnv(
     if (env.DATABASE_URL === undefined) throw new Error('In produzione serve DATABASE_URL');
     if (env.PUBLIC_ORIGIN === undefined) throw new Error('In produzione serve PUBLIC_ORIGIN');
     if (!env.COOKIE_SECURE) throw new Error('In produzione i cookie devono essere Secure');
+    if (env.TICK_SCHEDULER === 'external' && env.ADMIN_TOKEN === undefined) {
+      throw new Error('Con TICK_SCHEDULER=external serve ADMIN_TOKEN per il cron esterno');
+    }
   }
   return env;
 }

@@ -46,7 +46,8 @@ export interface TickSummary {
  */
 export class GameService {
   private running: Promise<unknown> = Promise.resolve();
-  nextTickAt: number | null = null;
+  /** Orario previsto del prossimo tick (lo imposta chi gestisce l'orologio). */
+  nextTickAt: () => number | null = () => null;
 
   private readonly store: Store;
   private readonly config: BalanceConfig;
@@ -169,7 +170,7 @@ export class GameService {
       names: Object.fromEntries(names),
       commands: recent.map(publicRecord),
       seasonOver: this.seasonOver,
-      nextTickAt: this.nextTickAt,
+      nextTickAt: this.seasonOver ? null : this.nextTickAt(),
     };
   }
 
@@ -232,4 +233,9 @@ function publicRecord(record: CommandRecord) {
     status: record.status,
     message: record.message,
   };
+}
+
+/** Prossimo istante multiplo dell'intervallo (contato da mezzanotte UTC del 1/1/1970). */
+export function nextAlignedTick(now: number, intervalMs: number): number {
+  return (Math.floor(now / intervalMs) + 1) * intervalMs;
 }
